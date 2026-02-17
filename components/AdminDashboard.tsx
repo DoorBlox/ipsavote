@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Voter, UserRole } from '../types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from '../constants';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Ticket, BarChart3, Upload, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2, XCircle, FileText } from 'lucide-react';
+import { Users, Ticket, BarChart3, Upload, Trash2, Printer, Search, CheckCircle, AlertTriangle, Loader2, XCircle, FileText } from 'lucide-react';
 
 interface AdminDashboardProps {
   voters: Voter[];
@@ -16,6 +16,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
   const [activeTab, setActiveTab] = useState<'stats' | 'voters' | 'manage'>('stats');
   const [isSyncing, setIsSyncing] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  // Safe ID generator fallback for non-secure contexts
+  const generateId = () => {
+    try {
+      return crypto.randomUUID();
+    } catch (e) {
+      return Math.random().toString(36).substring(2) + Date.now().toString(36);
+    }
+  };
 
   const maleElectionData = useMemo(() => {
     return MALE_CANDIDATES.map(c => ({
@@ -76,7 +85,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
           
           if (validRoles.includes(roleRaw)) {
             newVoters.push({
-              id: crypto.randomUUID(),
+              id: generateId(),
               name: name || `Voter ${i}`,
               role: roleRaw as UserRole,
               token: generateToken(),
@@ -156,7 +165,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
           <div className="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Total Base', val: voters.length, icon: Users, color: 'bg-[#7b2b2a]' },
-              { label: 'Participation', val: voters.filter(v => v.used).length, icon: CheckCircle2, color: 'bg-[#c5a059]' },
+              { label: 'Participation', val: voters.filter(v => v.used).length, icon: CheckCircle, color: 'bg-[#c5a059]' },
               { label: 'Remaining', val: voters.filter(v => !v.used).length, icon: Ticket, color: 'bg-slate-800' },
               { label: 'Yield', val: `${voters.length ? Math.round((voters.filter(v => v.used).length / voters.length) * 100) : 0}%`, icon: BarChart3, color: 'bg-[#7b2b2a]' },
             ].map((stat, i) => (
@@ -244,7 +253,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                     <td className="px-6 py-4">
                       {voter.used ? (
                         <span className="flex items-center gap-1 text-[#c5a059] font-black text-[9px] uppercase tracking-wider">
-                          <CheckCircle2 size={12} /> Confirmed
+                          <CheckCircle size={12} /> Confirmed
                         </span>
                       ) : (
                         <span className="text-slate-300 font-black text-[9px] uppercase tracking-wider">Idle</span>
