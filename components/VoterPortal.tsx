@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, Keyboard, ArrowRight, Loader2, Info, CameraOff } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
@@ -27,7 +26,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
         scanner.render((decodedText: string) => {
           setToken(decodedText);
           handleManualSubmit(decodedText);
-        }, (error: any) => {
+        }, () => {
           // Continuous scanning...
         });
         
