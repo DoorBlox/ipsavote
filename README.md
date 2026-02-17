@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# IPSA Student Council Election Portal
 
-This contains everything you need to run your app locally.
+A professional, secure voting platform for Student Council elections.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1Z4s96-q42_cCNGdaL3YujO04oIZijk1h
+## 🚀 Deployment to Vercel
 
-## Run Locally
+1. **GitHub**: Upload these files to a GitHub repository.
+2. **Vercel Dashboard**: Log in to [Vercel](https://vercel.com) and click **Add New Project**.
+3. **Import**: Import your GitHub repository.
+4. **Environment Variables**:
+   - Add `API_KEY` in the project settings. This will be used as the admin passphrase if not explicitly changed in `constants.ts`.
+5. **Deploy**: Vercel will automatically detect Vite and deploy your app.
 
-**Prerequisites:**  Node.js
+## 🛠 Features
 
+- **Role-Based Ballots**: Automatically shows the correct candidates based on whether the voter is Male, Female, or a Teacher.
+- **QR Authentication**: Unique single-use tokens distributed via QR codes.
+- **Admin Dashboard**: Real-time stats, turnout tracking, and CSV voter management.
+- **Printable Tokens**: Generate A4-ready sheets of QR tokens for physical distribution.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 📦 Tech Stack
+
+- **React 19**
+- **Vite**
+- **Tailwind CSS**
+- **Lucide React** (Icons)
+- **Recharts** (Data Visualization)
+- **Html5-Qrcode** (Scanner)
