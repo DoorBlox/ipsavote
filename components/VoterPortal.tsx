@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, Keyboard, ArrowRight, Loader2, Info, CameraOff } from 'lucide-react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 interface VoterPortalProps {
   onAuth: (token: string) => { success: boolean; error?: string };
@@ -10,144 +10,141 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
   const [token, setToken] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCameraReady, setIsCameraReady] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
-  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const scannerRef = useRef<any>(null);
 
   useEffect(() => {
     const startScanner = async () => {
       try {
-        const html5QrCode = new Html5Qrcode("reader");
-        html5QrCodeRef.current = html5QrCode;
-
-        const config = { fps: 20, qrbox: { width: 280, height: 280 } };
-
-        // Attempt to request and start camera instantly
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          config,
-          (decodedText) => {
-            setToken(decodedText);
-            handleManualSubmit(decodedText);
-          },
-          () => {} // Background scanning errors are ignored
-        );
-        setIsCameraReady(true);
+        const scanner = new Html5QrcodeScanner("reader", { 
+          fps: 15, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          rememberLastUsedCamera: true
+        }, false);
+        
+        scanner.render((decodedText: string) => {
+          setToken(decodedText);
+          handleManualSubmit(decodedText);
+        }, () => {
+          // Continuous scanning...
+        });
+        
+        scannerRef.current = scanner;
       } catch (err) {
-        console.error("Camera access failed:", err);
-        setScannerError("Camera blocked or unavailable. Please grant permission or enter token manually.");
+        console.error("Scanner init error:", err);
+        setScannerError("Could not access camera. Please use manual entry.");
       }
     };
 
-    // Small delay to ensure the DOM element is ready
     const timer = setTimeout(startScanner, 100);
 
     return () => {
       clearTimeout(timer);
-      if (html5QrCodeRef.current) {
-        html5QrCodeRef.current.stop().catch(e => console.error("Scanner shutdown error:", e));
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(console.error);
+        scannerRef.current = null;
       }
     };
   }, []);
 
   const handleManualSubmit = (inputToken: string) => {
-    if (!inputToken.trim() || isLoading) return;
+    if (!inputToken.trim()) return;
+    
     setIsLoading(true);
     setError(null);
+    
     setTimeout(() => {
       const result = onAuth(inputToken.trim());
       if (!result.success) {
-        setError(result.error || 'Invalid token');
+        setError(result.error || 'Unknown error');
         setIsLoading(false);
       }
-    }, 300);
+    }, 500);
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
       <div className="text-center">
-        <h2 className="text-4xl font-black text-[#7b2b2a] mb-2 tracking-tight uppercase">IPSA Election Portal</h2>
-        <p className="text-slate-500 text-lg font-medium">Please scan your voter QR code for authentication.</p>
+        <h2 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">IPSA Student Election</h2>
+        <p className="text-slate-500 text-lg">Position your QR code in front of the camera to begin.</p>
       </div>
 
-      <div className="grid lg:grid-cols-5 gap-8 items-start">
-        <div className="lg:col-span-3 bg-white p-6 rounded-3xl shadow-2xl border-2 border-[#faf7f2] overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#c5a059] opacity-5 -translate-y-1/2 translate-x-1/2 rotate-45"></div>
-          
+      <div className="grid md:grid-cols-5 gap-8 items-start">
+        <div className="md:col-span-3 bg-white p-6 rounded-3xl shadow-xl border border-indigo-50 overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="bg-[#7b2b2a] p-2.5 rounded-xl text-white shadow-lg">
+              <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-200">
                 <QrCode size={24} />
               </div>
-              <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">Voter Scanner</h3>
+              <h3 className="font-bold text-xl text-slate-800">Direct Scan</h3>
             </div>
-            {isLoading && <Loader2 className="animate-spin text-[#7b2b2a]" size={24} />}
+            {isLoading && <Loader2 className="animate-spin text-indigo-600" size={24} />}
           </div>
           
-          <div className="relative">
-            <div id="reader" className="overflow-hidden rounded-2xl bg-slate-900 border-4 border-[#faf7f2] shadow-inner aspect-square">
-              {!isCameraReady && !scannerError && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-slate-900 z-10">
-                  <Loader2 className="animate-spin mb-4 text-[#c5a059]" size={40} />
-                  <p className="font-black text-[10px] uppercase tracking-widest">Activating Lens...</p>
-                </div>
-              )}
+          <div className="relative group">
+            <div id="reader" className="overflow-hidden rounded-2xl bg-slate-900 border-4 border-slate-100 shadow-inner aspect-square">
               {scannerError && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-[#7b2b2a]/10 p-8 text-center border-4 border-dashed border-[#7b2b2a]/20">
-                  <CameraOff size={48} className="mb-4 text-[#7b2b2a]" />
-                  <p className="font-bold text-sm text-[#7b2b2a] uppercase leading-relaxed">{scannerError}</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-slate-800 p-8 text-center">
+                  <CameraOff size={48} className="mb-4 text-slate-500" />
+                  <p className="font-medium">{scannerError}</p>
                 </div>
               )}
             </div>
+            
+            {!scannerError && !isLoading && (
+              <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-1 bg-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-pulse pointer-events-none rounded-full" />
+            )}
           </div>
           
-          <p className="mt-6 text-center text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">
-            IPSA Secure Verification Active
+          <p className="mt-6 text-center text-sm text-slate-400 font-medium">
+            Keep the QR code steady and centered within the frame.
           </p>
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+        <div className="md:col-span-2 space-y-6">
+          <div className="bg-white p-6 rounded-3xl shadow-lg border border-slate-100">
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-[#faf7f2] p-2 rounded-xl text-[#7b2b2a]">
+              <div className="bg-slate-100 p-2 rounded-xl text-slate-600">
                 <Keyboard size={20} />
               </div>
-              <h3 className="font-black text-slate-800 uppercase tracking-tight">Token Access</h3>
+              <h3 className="font-bold text-slate-800">Manual Entry</h3>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Entry Code</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Voter Token</label>
                 <input 
                   type="text" 
                   value={token}
                   onChange={(e) => setToken(e.target.value.toUpperCase())}
-                  placeholder="CODE-0000"
-                  className="w-full px-4 py-4 text-2xl tracking-widest font-mono text-center uppercase rounded-2xl border-2 border-[#faf7f2] focus:border-[#c5a059] outline-none transition-all bg-white text-slate-900 shadow-sm"
+                  placeholder="ABC-1234"
+                  className="w-full px-4 py-4 text-2xl tracking-widest font-mono text-center uppercase rounded-2xl border-2 border-slate-100 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 outline-none transition-all bg-white text-slate-900 shadow-sm"
                 />
               </div>
 
               {error && (
-                <div className="bg-rose-50 text-[#7b2b2a] p-4 rounded-xl text-xs font-black border border-rose-100 uppercase text-center">
-                  {error}
+                <div className="bg-rose-50 text-rose-600 p-4 rounded-xl text-sm font-semibold border border-rose-100 animate-in fade-in slide-in-from-top-2">
+                  ⚠️ {error}
                 </div>
               )}
 
               <button 
                 onClick={() => handleManualSubmit(token)}
                 disabled={isLoading || token.length < 3}
-                className="w-full bg-[#7b2b2a] disabled:bg-slate-200 disabled:text-slate-400 hover:bg-[#5a1f1e] text-white font-black uppercase tracking-widest py-5 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2"
+                className="w-full bg-indigo-600 disabled:bg-slate-200 disabled:text-slate-400 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
               >
-                {isLoading ? <Loader2 className="animate-spin" /> : <>Cast Vote <ArrowRight size={20} /></>}
+                {isLoading ? <Loader2 className="animate-spin" /> : <>Continue to Vote <ArrowRight size={20} /></>}
               </button>
             </div>
           </div>
 
-          <div className="bg-[#c5a059]/5 p-6 rounded-3xl border border-[#c5a059]/20">
+          <div className="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100/50">
             <div className="flex items-start gap-3">
-              <Info className="text-[#c5a059] shrink-0 mt-0.5" size={18} />
-              <div className="text-[11px] text-[#7b2b2a]/70 leading-relaxed font-bold uppercase tracking-wider">
-                Choices are anonymous. Tokens verify authorization once.
+              <Info className="text-indigo-400 shrink-0 mt-0.5" size={18} />
+              <div className="text-xs text-indigo-900/60 leading-relaxed">
+                <p className="font-bold text-indigo-900/80 mb-1">Voting Privacy</p>
+                Your vote is completely anonymous. The system only tracks that your token has been used.
               </div>
             </div>
           </div>
