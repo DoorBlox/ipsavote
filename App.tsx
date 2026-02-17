@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Voter, ViewState } from './types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from './constants';
@@ -20,6 +21,12 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Debug: Log if keys are missing (only in development)
+if (import.meta.env.DEV) {
+  if (!firebaseConfig.apiKey) console.warn("Firebase API Key is missing!");
+  if (!firebaseConfig.projectId) console.warn("Firebase Project ID is missing!");
+}
+
 // Initialize Firebase only if config is complete
 const isFirebaseEnabled = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
 const app = isFirebaseEnabled ? initializeApp(firebaseConfig) : null;
@@ -30,7 +37,7 @@ const App: React.FC = () => {
   const [voters, setVoters] = useState<Voter[]>([]);
   const [activeVoter, setActiveVoter] = useState<Voter | null>(null);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
-  const [dbConnected, setDbConnected] = useState(isFirebaseEnabled);
+  const [dbConnected, setDbConnected] = useState(false);
   const [loading, setLoading] = useState(isFirebaseEnabled);
 
   useEffect(() => {
@@ -38,9 +45,11 @@ const App: React.FC = () => {
       const stored = localStorage.getItem('ipsa_voters');
       if (stored) setVoters(JSON.parse(stored));
       setLoading(false);
+      setDbConnected(false);
       return;
     }
 
+    setLoading(true);
     const unsub = onSnapshot(collection(db, 'voters'), 
       (snapshot) => {
         const voterData: Voter[] = [];
@@ -128,7 +137,7 @@ const App: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && isFirebaseEnabled) {
     return (
       <div className="min-h-screen bg-indigo-900 flex flex-col items-center justify-center text-white">
         <Loader2 className="animate-spin mb-4" size={48} />
@@ -181,7 +190,7 @@ const App: React.FC = () => {
       <main className="flex-1 container mx-auto px-4 py-8 relative">
         {!dbConnected && view !== 'admin-login' && !adminAuthenticated && (
           <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500">
-            ⚠️ The system is currently in offline fallback mode. Database synchronization is disabled.
+            ⚠️ {isFirebaseEnabled ? 'Connecting to database...' : 'The system is in offline mode. Local storage only.'}
           </div>
         )}
 
