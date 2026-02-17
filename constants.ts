@@ -1,4 +1,3 @@
-
 import { Candidate } from './types';
 
 export const MALE_CANDIDATES: Candidate[] = [
@@ -35,4 +34,4 @@ export const FEMALE_CANDIDATES: Candidate[] = [
   },
 ];
 
-export const ADMIN_KEY = process.env.API_KEY || 'IPSA2025';
+export const ADMIN_KEY = import.meta.env.VITE_ADMIN_PASSPHRASE || 'IPSA2025';

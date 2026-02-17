@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Voter, ViewState } from './types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from './constants';
@@ -10,18 +9,19 @@ import { CheckCircle2, ShieldCheck, LogOut, Loader2, Wifi, WifiOff } from 'lucid
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, onSnapshot, doc, updateDoc, writeBatch } from 'firebase/firestore';
 
-// Configuration - Use VITE_ prefix for Vite environment variables
+// Configuration - Vite automatically populates import.meta.env with VITE_ variables
 const firebaseConfig = {
-  apiKey: (import.meta as any).env.VITE_FIREBASE_API_KEY || "",
-  authDomain: (import.meta as any).env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: (import.meta as any).env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: (import.meta as any).env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: (import.meta as any).env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: (import.meta as any).env.VITE_FIREBASE_APP_ID || ""
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase only if config exists
-const isFirebaseEnabled = !!firebaseConfig.apiKey;
+// Initialize Firebase only if config is complete
+const isFirebaseEnabled = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
 const app = isFirebaseEnabled ? initializeApp(firebaseConfig) : null;
 const db = app ? getFirestore(app) : null;
 
@@ -33,10 +33,8 @@ const App: React.FC = () => {
   const [dbConnected, setDbConnected] = useState(isFirebaseEnabled);
   const [loading, setLoading] = useState(isFirebaseEnabled);
 
-  // Sync with Firestore in real-time
   useEffect(() => {
     if (!db) {
-      // Fallback to localStorage if Firebase isn't configured
       const stored = localStorage.getItem('ipsa_voters');
       if (stored) setVoters(JSON.parse(stored));
       setLoading(false);
@@ -61,7 +59,6 @@ const App: React.FC = () => {
     return () => unsub();
   }, []);
 
-  // Sync to local storage for extra safety/offline support
   useEffect(() => {
     if (voters.length > 0) {
       localStorage.setItem('ipsa_voters', JSON.stringify(voters));
@@ -83,7 +80,6 @@ const App: React.FC = () => {
 
     try {
       if (db) {
-        // Update specific document in Firestore
         const voterRef = doc(db, 'voters', activeVoter.id);
         await updateDoc(voterRef, {
           used: true,
@@ -91,7 +87,6 @@ const App: React.FC = () => {
           femaleVote: femaleId
         });
       } else {
-        // Local fallback
         const updatedVoters = voters.map(v => 
           v.id === activeVoter.id ? { ...v, used: true, maleVote: maleId, femaleVote: femaleId } : v
         );
@@ -111,7 +106,7 @@ const App: React.FC = () => {
   };
 
   const handleAdminLogin = (key: string) => {
-    const expected = (import.meta as any).env.VITE_ADMIN_PASSPHRASE || 'admin123';
+    const expected = import.meta.env.VITE_ADMIN_PASSPHRASE || 'admin123';
     if (key === expected) {
       setAdminAuthenticated(true);
       setView('admin-dashboard');
@@ -123,8 +118,6 @@ const App: React.FC = () => {
   const setVotersInDb = async (newVoters: Voter[]) => {
     if (db) {
       const batch = writeBatch(db);
-      // Clear existing (optional, but for new lists it's common)
-      // For this simple version, we'll just add/overwrite
       newVoters.forEach(v => {
         const ref = doc(db, 'voters', v.id);
         batch.set(ref, v);
@@ -146,7 +139,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
       <header className="bg-indigo-900 text-white p-4 shadow-lg flex justify-between items-center no-print">
         <div 
           className="flex items-center gap-2 cursor-pointer" 
@@ -186,7 +178,6 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-8 relative">
         {!dbConnected && view !== 'admin-login' && !adminAuthenticated && (
           <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500">
@@ -279,7 +270,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="bg-slate-50 border-t border-slate-200 p-6 no-print">
         <div className="container mx-auto text-center">
           <p className="text-slate-400 text-sm">
