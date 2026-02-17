@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Voter, Candidate, UserRole } from '../types';
-import { Check, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface BallotProps {
   voter: Voter;
@@ -32,73 +33,68 @@ const Ballot: React.FC<BallotProps> = ({ voter, maleCandidates, femaleCandidates
 
   return (
     <div className="max-w-4xl mx-auto animate-in slide-in-from-right-4 duration-500">
-      <div className="bg-indigo-600 rounded-t-3xl p-8 text-white">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 className="text-3xl font-bold mb-1">Official Ballot</h2>
-            <div className="flex items-center gap-2 text-indigo-100">
-              <span className="capitalize font-medium">{getRoleDisplay()}</span>
-              <span>•</span>
-              <span>{voter.name}</span>
+      <div className="bg-[#7b2b2a] rounded-t-[2.5rem] p-8 md:p-12 text-white border-b-4 border-[#c5a059]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex items-center gap-4">
+             <div className="bg-white/10 p-3 rounded-2xl border border-white/20">
+               <ShieldCheck size={32} className="text-amber-200" />
+             </div>
+             <div>
+              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter">Official Ballot</h2>
+              <div className="flex items-center gap-2 text-amber-100 font-bold text-sm md:text-base uppercase tracking-wider">
+                <span>{getRoleDisplay()}</span>
+                <span className="opacity-50">•</span>
+                <span>{voter.name}</span>
+              </div>
             </div>
           </div>
-          <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-sm font-semibold border border-white/30">
-            Token: {voter.token}
+          <div className="bg-white/10 backdrop-blur-xl px-5 py-3 rounded-2xl text-xs md:text-sm font-black border border-white/20 tracking-[0.2em]">
+            TOKEN: {voter.token}
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-b-3xl shadow-2xl p-8 border-x border-b border-indigo-50 space-y-12">
+      <div className="bg-white rounded-b-[2.5rem] shadow-2xl p-8 md:p-12 space-y-16">
         {/* Male Election Section */}
         {(voter.role === UserRole.MALE || voter.role === UserRole.TEACHER) && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b pb-4">
-              <h3 className="text-2xl font-bold text-slate-800">Male President & Vice Election</h3>
-              <div className="bg-blue-50 text-blue-600 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Choice 1 of 1</div>
+          <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-slate-100 pb-6">
+              <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Male Presidential Ticket</h3>
+              <div className="bg-amber-50 text-[#7b2b2a] text-[10px] px-4 py-1.5 rounded-full font-black uppercase tracking-widest border border-[#7b2b2a]/10">1 Seat Available</div>
             </div>
             
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-8">
               {maleCandidates.map((candidate) => (
                 <div 
                   key={candidate.id}
                   onClick={() => setSelectedMale(candidate.id)}
                   className={`
-                    relative cursor-pointer group rounded-2xl border-2 transition-all p-5
+                    relative cursor-pointer group rounded-[2rem] border-4 transition-all p-6
                     ${selectedMale === candidate.id 
-                      ? 'border-indigo-600 bg-indigo-50 ring-4 ring-indigo-50' 
-                      : 'border-slate-100 bg-slate-50 hover:border-slate-200'}
+                      ? 'border-[#7b2b2a] bg-[#fdfbf7] shadow-xl' 
+                      : 'border-slate-50 bg-[#fdfbf7]/50 hover:border-slate-200'}
                   `}
                 >
-                  <div className="flex items-center gap-5 mb-5">
+                  <div className="flex items-center gap-6 mb-6">
                     <div className="relative shrink-0">
                       <img 
                         src={candidate.imageUrl} 
                         alt={candidate.name} 
-                        className={`w-24 h-24 rounded-2xl object-cover shadow-md transition-all ${selectedMale === candidate.id ? 'ring-4 ring-white' : ''}`}
+                        className={`w-28 h-28 rounded-3xl object-cover shadow-lg transition-all ${selectedMale === candidate.id ? 'ring-4 ring-[#7b2b2a]/20 scale-105' : ''}`}
                       />
                       {selectedMale === candidate.id && (
-                        <div className="absolute -top-2 -right-2 bg-indigo-600 text-white p-1 rounded-full border-2 border-white shadow-lg">
-                          <Check size={18} strokeWidth={4} />
+                        <div className="absolute -top-3 -right-3 bg-[#7b2b2a] text-[#c5a059] p-2 rounded-full border-4 border-white shadow-xl">
+                          <Check size={20} strokeWidth={4} />
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mb-1">Presidential Ticket</p>
-                      <h4 className="text-xl font-bold text-slate-900 leading-tight truncate">{candidate.name}</h4>
-                      <div className="flex items-center gap-1.5 py-0.5">
-                        <span className="text-slate-400 font-bold text-[10px] uppercase">&</span>
-                        <h4 className="text-xl font-bold text-slate-900 leading-tight truncate">{candidate.viceName}</h4>
+                      <p className="text-[10px] text-[#7b2b2a] font-black uppercase tracking-[0.2em] mb-2">Primary Nominee</p>
+                      <h4 className="text-2xl font-black text-slate-900 leading-none mb-1">{candidate.name}</h4>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[#c5a059] font-black text-[10px] uppercase">&</span>
+                        <h4 className="text-lg font-bold text-slate-700 leading-none">{candidate.viceName}</h4>
                       </div>
-                    </div>
-                  </div>
-                  <div className="bg-white/50 p-3 rounded-xl space-y-1 border border-indigo-100/30">
-                    <div className="flex items-center justify-between text-[11px] text-slate-600">
-                      <span className="font-bold opacity-70">President</span>
-                      <span className="font-medium">{candidate.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-600">
-                      <span className="font-bold opacity-70">Vice President</span>
-                      <span className="font-medium">{candidate.viceName}</span>
                     </div>
                   </div>
                 </div>
@@ -109,54 +105,44 @@ const Ballot: React.FC<BallotProps> = ({ voter, maleCandidates, femaleCandidates
 
         {/* Female Election Section */}
         {(voter.role === UserRole.FEMALE || voter.role === UserRole.TEACHER) && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b pb-4">
-              <h3 className="text-2xl font-bold text-slate-800">Female President & Vice Election</h3>
-              <div className="bg-rose-50 text-rose-600 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Choice 1 of 1</div>
+          <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-slate-100 pb-6">
+              <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Female Presidential Ticket</h3>
+              <div className="bg-amber-50 text-[#7b2b2a] text-[10px] px-4 py-1.5 rounded-full font-black uppercase tracking-widest border border-[#7b2b2a]/10">1 Seat Available</div>
             </div>
             
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-8">
               {femaleCandidates.map((candidate) => (
                 <div 
                   key={candidate.id}
                   onClick={() => setSelectedFemale(candidate.id)}
                   className={`
-                    relative cursor-pointer group rounded-2xl border-2 transition-all p-5
+                    relative cursor-pointer group rounded-[2rem] border-4 transition-all p-6
                     ${selectedFemale === candidate.id 
-                      ? 'border-rose-500 bg-rose-50 ring-4 ring-rose-50' 
-                      : 'border-slate-100 bg-slate-50 hover:border-slate-200'}
+                      ? 'border-[#7b2b2a] bg-[#fdfbf7] shadow-xl' 
+                      : 'border-slate-50 bg-[#fdfbf7]/50 hover:border-slate-200'}
                   `}
                 >
-                  <div className="flex items-center gap-5 mb-5">
+                  <div className="flex items-center gap-6 mb-6">
                     <div className="relative shrink-0">
                       <img 
                         src={candidate.imageUrl} 
                         alt={candidate.name} 
-                        className={`w-24 h-24 rounded-2xl object-cover shadow-md transition-all ${selectedFemale === candidate.id ? 'ring-4 ring-white' : ''}`}
+                        className={`w-28 h-28 rounded-3xl object-cover shadow-lg transition-all ${selectedFemale === candidate.id ? 'ring-4 ring-[#7b2b2a]/20 scale-105' : ''}`}
                       />
                       {selectedFemale === candidate.id && (
-                        <div className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full border-2 border-white shadow-lg">
-                          <Check size={18} strokeWidth={4} />
+                        <div className="absolute -top-3 -right-3 bg-[#7b2b2a] text-[#c5a059] p-2 rounded-full border-4 border-white shadow-xl">
+                          <Check size={20} strokeWidth={4} />
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-rose-400 font-bold uppercase tracking-widest mb-1">Presidential Ticket</p>
-                      <h4 className="text-xl font-bold text-slate-900 leading-tight truncate">{candidate.name}</h4>
-                      <div className="flex items-center gap-1.5 py-0.5">
-                        <span className="text-slate-400 font-bold text-[10px] uppercase">&</span>
-                        <h4 className="text-xl font-bold text-slate-900 leading-tight truncate">{candidate.viceName}</h4>
+                      <p className="text-[10px] text-[#7b2b2a] font-black uppercase tracking-[0.2em] mb-2">Primary Nominee</p>
+                      <h4 className="text-2xl font-black text-slate-900 leading-none mb-1">{candidate.name}</h4>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[#c5a059] font-black text-[10px] uppercase">&</span>
+                        <h4 className="text-lg font-bold text-slate-700 leading-none">{candidate.viceName}</h4>
                       </div>
-                    </div>
-                  </div>
-                  <div className="bg-white/50 p-3 rounded-xl space-y-1 border border-rose-100/30">
-                    <div className="flex items-center justify-between text-[11px] text-slate-600">
-                      <span className="font-bold opacity-70">President</span>
-                      <span className="font-medium">{candidate.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-600">
-                      <span className="font-bold opacity-70">Vice President</span>
-                      <span className="font-medium">{candidate.viceName}</span>
                     </div>
                   </div>
                 </div>
@@ -165,31 +151,32 @@ const Ballot: React.FC<BallotProps> = ({ voter, maleCandidates, femaleCandidates
           </div>
         )}
 
-        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-start gap-3">
-          <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" />
-          <p className="text-sm text-slate-600">
-            <strong>Important:</strong> Review your choices carefully. Once you click "Cast Ballot", your decision is final and your token will be invalidated. Multiple votes are not permitted.
+        <div className="bg-[#fdfbf7] p-6 rounded-3xl border-2 border-amber-100 flex items-start gap-4">
+          <AlertTriangle className="text-amber-500 shrink-0 mt-1" size={24} />
+          <p className="text-sm font-medium text-slate-600 leading-relaxed">
+            <strong className="text-[#7b2b2a] uppercase tracking-wider block mb-1">Confirmation Required</strong>
+            Review your selections. By casting this ballot, you confirm these are your chosen representatives. This action is final and cannot be undone once submitted.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+        <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
           <button 
             disabled={!canSubmit()}
             onClick={() => onSubmit(selectedMale, selectedFemale)}
             className={`
-              w-full sm:flex-1 py-4 px-8 rounded-2xl font-bold text-lg transition-all shadow-lg
+              w-full sm:flex-1 py-5 px-10 rounded-2xl font-black text-xl uppercase tracking-widest transition-all shadow-xl
               ${canSubmit() 
-                ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 active:scale-[0.98]' 
+                ? 'bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white shadow-red-900/20 active:scale-[0.98]' 
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}
             `}
           >
-            Cast Official Ballot
+            Submit Final Ballot
           </button>
           <button 
             onClick={onCancel}
-            className="w-full sm:w-auto py-4 px-10 text-slate-500 hover:text-slate-700 font-bold transition-all"
+            className="w-full sm:w-auto py-5 px-12 text-slate-400 hover:text-[#7b2b2a] font-black uppercase tracking-widest text-sm transition-all"
           >
-            Cancel & Exit
+            Abort Vote
           </button>
         </div>
       </div>
