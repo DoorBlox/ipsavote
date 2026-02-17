@@ -104,7 +104,7 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#7b2b2a] flex flex-col items-center justify-center text-white">
         <Loader2 className="animate-spin mb-4" size={48} />
-        <h2 className="text-xl font-bold tracking-tight">Accessing IPSA Secure Cloud...</h2>
+        <h2 className="text-xl font-bold tracking-tight uppercase">IPSA Election Portal</h2>
       </div>
     );
   }
@@ -123,7 +123,7 @@ const App: React.FC = () => {
           {adminAuthenticated && (
             <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${dbConnected ? 'bg-[#c5a059]/20 text-[#c5a059]' : 'bg-rose-500/20 text-rose-400'}`}>
               {dbConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
-              {dbConnected ? 'Sync Active' : 'Offline Mode'}
+              {dbConnected ? 'Sync' : 'Offline'}
             </div>
           )}
           
@@ -145,9 +145,9 @@ const App: React.FC = () => {
           <div className="max-w-md mx-auto mt-20 text-center animate-in fade-in zoom-in duration-500">
             <div className="bg-white p-10 rounded-3xl shadow-2xl border-t-8 border-[#c5a059]">
               <CheckCircle size={80} className="text-[#7b2b2a] mx-auto mb-6" />
-              <h2 className="text-3xl font-black text-slate-800 mb-2 uppercase tracking-tight">Ballot Cast</h2>
-              <p className="text-slate-500 mb-8 font-medium">Thank you. Your vote has been securely transmitted to the Association records.</p>
-              <button onClick={() => setView('voter-portal')} className="w-full bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white font-black uppercase tracking-widest py-4 rounded-2xl transition-all shadow-xl">Return to Portal</button>
+              <h2 className="text-3xl font-black text-slate-800 mb-2 uppercase tracking-tight">Vote Cast Successfully</h2>
+              <p className="text-slate-500 mb-8 font-medium">Thank you for your participation. Your choice has been recorded securely.</p>
+              <button onClick={() => setView('voter-portal')} className="w-full bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white font-black uppercase tracking-widest py-4 rounded-2xl transition-all shadow-xl">Back to Portal</button>
             </div>
           </div>
         )}
@@ -155,11 +155,11 @@ const App: React.FC = () => {
         {view === 'admin-login' && (
           <div className="max-w-md mx-auto mt-20">
             <div className="bg-white p-8 rounded-3xl shadow-2xl border-t-8 border-[#c5a059]">
-              <h2 className="text-2xl font-black text-slate-800 mb-6 text-center uppercase tracking-tight">Admin Gate</h2>
-              <form onSubmit={(e) => { e.preventDefault(); if (!handleAdminLogin((e.currentTarget.elements.namedItem('adminKey') as HTMLInputElement).value)) alert('Invalid Key'); }}>
+              <h2 className="text-2xl font-black text-slate-800 mb-6 text-center uppercase tracking-tight">Admin Authentication</h2>
+              <form onSubmit={(e) => { e.preventDefault(); if (!handleAdminLogin((e.currentTarget.elements.namedItem('adminKey') as HTMLInputElement).value)) alert('Invalid Passphrase'); }}>
                 <div className="space-y-4">
-                  <input name="adminKey" type="password" placeholder="AUTHENTICATION KEY" className="w-full px-4 py-4 rounded-2xl border-2 border-[#faf7f2] focus:border-[#c5a059] outline-none text-center font-black tracking-widest uppercase" autoFocus />
-                  <button type="submit" className="w-full bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white font-black uppercase tracking-widest py-4 rounded-2xl transition-all">Authorize Access</button>
+                  <input name="adminKey" type="password" placeholder="ADMIN PASSPHRASE" className="w-full px-4 py-4 rounded-2xl border-2 border-[#faf7f2] focus:border-[#c5a059] outline-none text-center font-black tracking-widest uppercase" autoFocus />
+                  <button type="submit" className="w-full bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white font-black uppercase tracking-widest py-4 rounded-2xl transition-all">Authorize</button>
                 </div>
               </form>
             </div>
