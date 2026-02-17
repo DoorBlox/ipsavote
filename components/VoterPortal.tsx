@@ -33,7 +33,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           handleManualSubmit(decodedText);
           // Auto-clear after successful scan to prevent multiple triggers
           scanner.clear().catch(console.error);
-        }, (errorMessage: string) => {
+        }, (_errorMessage: string) => {
           // Continuous scanning... log error to debug if needed
         });
         

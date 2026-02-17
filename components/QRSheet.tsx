@@ -2,7 +2,7 @@
 import React from 'react';
 import { Voter } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
-import { ArrowLeft, ShieldCheck, Download, Printer } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Printer } from 'lucide-react';
 
 interface QRSheetProps {
   voters: Voter[];
