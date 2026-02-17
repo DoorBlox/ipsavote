@@ -54,14 +54,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
       try {
         const text = event.target?.result as string;
         const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
-        if (lines.length < 2) throw new Error("CSV file is empty or missing data rows.");
+        if (lines.length < 2) throw new Error("CSV file is empty.");
 
         const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
         const nameIdx = headers.indexOf('name');
         const roleIdx = headers.indexOf('role');
 
         if (nameIdx === -1 || roleIdx === -1) {
-          throw new Error("CSV must have 'Name' and 'Role' columns.");
+          throw new Error("CSV requires 'Name' and 'Role' columns.");
         }
 
         const newVoters: Voter[] = [];
@@ -87,53 +87,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
           }
         }
         
-        if (newVoters.length === 0) {
-          throw new Error("No valid voters found. Check that roles are 'male', 'female', or 'teacher'.");
-        }
+        if (newVoters.length === 0) throw new Error("No valid data parsed.");
 
         await setVoters(newVoters);
-        setUploadStatus({ type: 'success', message: `Successfully synced ${newVoters.length} voters to Supabase!` });
+        setUploadStatus({ type: 'success', message: `${newVoters.length} entries synced.` });
       } catch (err: any) {
-        console.error("CSV Processing Error:", err);
-        setUploadStatus({ type: 'error', message: err.message || "Failed to process CSV file." });
+        setUploadStatus({ type: 'error', message: err.message });
       } finally {
         setIsSyncing(false);
-        // Reset input
         e.target.value = '';
       }
-    };
-    reader.onerror = () => {
-      setUploadStatus({ type: 'error', message: "Failed to read file." });
-      setIsSyncing(false);
     };
     reader.readAsText(file);
   };
 
-  const exportCSV = () => {
-    const header = "Name,Role,Token,Used,Male Vote,Female Vote\n";
-    const rows = voters.map((v) => {
-      const maleCand = MALE_CANDIDATES.find(c => c.id === v.maleVote)?.name || '';
-      const femaleCand = FEMALE_CANDIDATES.find(c => c.id === v.femaleVote)?.name || '';
-      return `${v.name},${v.role},${v.token},${v.used ? 'Yes' : 'No'},${maleCand},${femaleCand}`;
-    }).join('\n');
-    
-    const blob = new Blob([header + rows], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ipsa_election_results.csv`;
-    a.click();
-  };
-
   const handleClearAll = async () => {
-    if (confirm('CRITICAL: Are you sure you want to permanently delete all election data across ALL devices?')) {
+    if (confirm('Wipe ALL election data from the cloud?')) {
       setIsSyncing(true);
       try {
         await onClearAll();
-        localStorage.removeItem('ipsa_voters');
-        setUploadStatus({ type: 'success', message: "All cloud data cleared." });
+        setUploadStatus({ type: 'success', message: "Cloud reset complete." });
       } catch (err) {
-        setUploadStatus({ type: 'error', message: "Failed to clear cloud data." });
+        setUploadStatus({ type: 'error', message: "Clear failed." });
       } finally {
         setIsSyncing(false);
       }
@@ -148,41 +123,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div>
-            <h2 className="text-3xl font-bold text-slate-800">Admin Control Center</h2>
-            <p className="text-slate-500">Monitor results and manage voter credentials.</p>
-          </div>
+        <div>
+          <h2 className="text-3xl font-black text-[#7b2b2a] uppercase tracking-tight">Admin Console</h2>
+          <p className="text-slate-500 font-medium">Global sync and analytics management.</p>
         </div>
         <div className="flex gap-2">
-          <button 
-            onClick={() => setActiveTab('stats')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${activeTab === 'stats' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
-          >
-            <BarChart3 size={18} /> Stats
-          </button>
-          <button 
-            onClick={() => setActiveTab('voters')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${activeTab === 'voters' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
-          >
-            <Users size={18} /> Voters
-          </button>
-          <button 
-            onClick={() => setActiveTab('manage')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${activeTab === 'manage' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
-          >
-            <Ticket size={18} /> Manage
-          </button>
+          {[
+            { id: 'stats', label: 'Stats', icon: BarChart3 },
+            { id: 'voters', label: 'Registry', icon: Users },
+            { id: 'manage', label: 'Cloud', icon: Ticket }
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === tab.id ? 'bg-[#7b2b2a] text-[#fdfaf6] shadow-lg' : 'bg-white text-slate-600 hover:bg-[#faf7f2] border border-slate-200'}`}
+            >
+              <tab.icon size={16} /> {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {uploadStatus && (
-        <div className={`p-4 rounded-2xl border flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 ${uploadStatus.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'}`}>
-          {uploadStatus.type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
-          <span className="font-medium text-sm">{uploadStatus.message}</span>
-          <button onClick={() => setUploadStatus(null)} className="ml-auto opacity-50 hover:opacity-100">
-            <XCircle size={16} />
-          </button>
+        <div className={`p-4 rounded-2xl border-2 flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 ${uploadStatus.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'}`}>
+          <span className="font-black text-xs uppercase tracking-wider">{uploadStatus.message}</span>
+          <button onClick={() => setUploadStatus(null)} className="ml-auto opacity-50"><XCircle size={16} /></button>
         </div>
       )}
 
@@ -190,60 +155,50 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
         <div className="grid md:grid-cols-2 gap-8">
           <div className="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Total Voters', val: voters.length, icon: Users, color: 'bg-blue-500' },
-              { label: 'Votes Cast', val: voters.filter(v => v.used).length, icon: CheckCircle2, color: 'bg-emerald-500' },
-              { label: 'Unused Tokens', val: voters.filter(v => !v.used).length, icon: Ticket, color: 'bg-amber-500' },
-              { label: 'Turnout', val: `${voters.length ? Math.round((voters.filter(v => v.used).length / voters.length) * 100) : 0}%`, icon: BarChart3, color: 'bg-indigo-500' },
+              { label: 'Total Base', val: voters.length, icon: Users, color: 'bg-[#7b2b2a]' },
+              { label: 'Participation', val: voters.filter(v => v.used).length, icon: CheckCircle2, color: 'bg-[#c5a059]' },
+              { label: 'Remaining', val: voters.filter(v => !v.used).length, icon: Ticket, color: 'bg-slate-800' },
+              { label: 'Yield', val: `${voters.length ? Math.round((voters.filter(v => v.used).length / voters.length) * 100) : 0}%`, icon: BarChart3, color: 'bg-[#7b2b2a]' },
             ].map((stat, i) => (
-              <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-                <div className={`${stat.color} p-3 rounded-xl text-white`}>
+              <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
+                <div className={`${stat.color} p-3 rounded-2xl text-white`}>
                   <stat.icon size={24} />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-                  <p className="text-2xl font-bold text-slate-800">{stat.val}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                  <p className="text-2xl font-black text-[#7b2b2a] leading-none">{stat.val}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <div className="w-2 h-6 bg-indigo-600 rounded-full" />
-              Male Election Standings
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <h3 className="text-sm font-black text-[#7b2b2a] mb-6 flex items-center gap-2 uppercase tracking-widest">
+              <div className="w-1.5 h-4 bg-[#c5a059] rounded-full" />
+              Male Wing Metrics
             </h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={maleElectionData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip 
-                    cursor={{fill: '#f8fafc'}}
-                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
-                  />
-                  <Bar dataKey="votes" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{fill: '#faf7f2'}} contentStyle={{borderRadius: '12px', border: 'none', fontWeight: 'bold'}} />
+                  <Bar dataKey="votes" fill="#7b2b2a" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <div className="w-2 h-6 bg-rose-500 rounded-full" />
-              Female Election Standings
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <h3 className="text-sm font-black text-[#7b2b2a] mb-6 flex items-center gap-2 uppercase tracking-widest">
+              <div className="w-1.5 h-4 bg-[#c5a059] rounded-full" />
+              Female Wing Metrics
             </h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={femaleElectionData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip 
-                    cursor={{fill: '#f8fafc'}}
-                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
-                  />
-                  <Bar dataKey="votes" fill="#f43f5e" radius={[8, 8, 0, 0]} />
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{fill: '#faf7f2'}} contentStyle={{borderRadius: '12px', border: 'none', fontWeight: 'bold'}} />
+                  <Bar dataKey="votes" fill="#c5a059" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -252,137 +207,97 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
       )}
 
       {activeTab === 'voters' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h3 className="text-xl font-bold text-slate-800">Voter Registry</h3>
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-[#faf7f2] flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h3 className="text-sm font-black text-[#7b2b2a] uppercase tracking-[0.2em]">Live Registry</h3>
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
                 type="text"
-                placeholder="Search name or token..."
+                placeholder="Search Database..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#faf7f2] bg-[#faf7f2]/30 focus:border-[#c5a059] outline-none text-xs font-bold"
               />
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+              <thead className="bg-[#faf7f2]/50 text-slate-400 text-[9px] font-black uppercase tracking-widest">
                 <tr>
-                  <th className="px-6 py-4">Voter Name</th>
-                  <th className="px-6 py-4">Role</th>
-                  <th className="px-6 py-4">Token</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Selections</th>
+                  <th className="px-6 py-4">Full Identity</th>
+                  <th className="px-6 py-4">Wing</th>
+                  <th className="px-6 py-4">Auth Token</th>
+                  <th className="px-6 py-4">Cloud Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[#faf7f2]">
                 {filteredVoters.map((voter) => (
-                  <tr key={voter.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-slate-700">{voter.name}</td>
+                  <tr key={voter.id} className="hover:bg-[#faf7f2]/40 transition-colors">
+                    <td className="px-6 py-4 text-xs font-bold text-slate-700">{voter.name}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide
-                        ${voter.role === UserRole.MALE ? 'bg-blue-100 text-blue-600' : 
-                          voter.role === UserRole.FEMALE ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${voter.role === UserRole.MALE ? 'border-[#7b2b2a]/20 text-[#7b2b2a]' : 'border-[#c5a059]/30 text-[#c5a059]'}`}>
                         {voter.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs">{voter.token}</td>
+                    <td className="px-6 py-4 font-mono text-[10px] text-slate-400">{voter.token}</td>
                     <td className="px-6 py-4">
                       {voter.used ? (
-                        <span className="flex items-center gap-1 text-emerald-600 font-bold text-xs uppercase">
-                          <CheckCircle2 size={14} /> Voted
+                        <span className="flex items-center gap-1 text-[#c5a059] font-black text-[9px] uppercase tracking-wider">
+                          <CheckCircle2 size={12} /> Confirmed
                         </span>
                       ) : (
-                        <span className="text-slate-400 font-bold text-xs uppercase">Pending</span>
+                        <span className="text-slate-300 font-black text-[9px] uppercase tracking-wider">Idle</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-xs text-slate-500">
-                      {voter.used ? (
-                        <>
-                          {voter.maleVote && <div>M: {MALE_CANDIDATES.find(c => c.id === voter.maleVote)?.name}</div>}
-                          {voter.femaleVote && <div>F: {FEMALE_CANDIDATES.find(c => c.id === voter.femaleVote)?.name}</div>}
-                        </>
-                      ) : '-'}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {filteredVoters.length === 0 && (
-              <div className="py-20 text-center text-slate-400">
-                No voters found matching your search.
-              </div>
-            )}
           </div>
         </div>
       )}
 
       {activeTab === 'manage' && (
         <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <Upload size={20} className="text-indigo-600" />
-              Voter Bulk Import
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+            <h3 className="text-sm font-black text-[#7b2b2a] flex items-center gap-2 uppercase tracking-[0.2em]">
+              <Upload size={16} className="text-[#c5a059]" />
+              Sync Interface
             </h3>
             <div className="space-y-4">
-              <div className="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 flex flex-col items-center text-center">
-                <FileText className="text-slate-400 mb-2" size={32} />
-                <p className="text-sm font-medium text-slate-600 mb-1">Upload CSV file</p>
-                <p className="text-[10px] text-slate-400 mb-4 font-mono">Format: Name, Role (male/female/teacher)</p>
-                
-                <input 
-                  type="file" 
-                  accept=".csv" 
-                  onChange={handleCSVUpload}
-                  className="hidden" 
-                  id="csv-upload"
-                  disabled={isSyncing}
-                />
-                <label 
-                  htmlFor="csv-upload"
-                  className={`bg-white border border-slate-200 hover:bg-slate-50 px-6 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all shadow-sm flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
-                >
-                  {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  {isSyncing ? 'Syncing...' : 'Select CSV File'}
+              <div className="p-6 border-2 border-dashed border-[#faf7f2] rounded-3xl bg-[#faf7f2]/30 flex flex-col items-center text-center">
+                <FileText className="text-slate-300 mb-2" size={32} />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">CSV (Name, Role)</p>
+                <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" id="csv-upload" />
+                <label htmlFor="csv-upload" className="bg-[#7b2b2a] text-[#fdfaf6] px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-[#5a1f1e] shadow-lg transition-all">
+                  Upload Batch
                 </label>
               </div>
-              
               <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={exportCSV}
-                  className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md shadow-indigo-100"
-                >
-                  <Download size={18} /> Export Data
+                <button onClick={onOpenQRSheet} className="flex items-center justify-center gap-2 bg-[#c5a059] text-white px-4 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-[#c5a059]/20 transition-all hover:brightness-105">
+                  <Printer size={16} /> Print Tokens
                 </button>
-                <button 
-                  onClick={onOpenQRSheet}
-                  className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md shadow-emerald-100"
-                >
-                  <Printer size={18} /> Print Tokens
+                <button onClick={() => window.location.reload()} className="flex items-center justify-center gap-2 bg-slate-800 text-white px-4 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all">
+                  Refresh Sync
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <Trash2 size={20} className="text-rose-600" />
-              Cloud Maintenance
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+            <h3 className="text-sm font-black text-[#7b2b2a] flex items-center gap-2 uppercase tracking-[0.2em]">
+              <Trash2 size={16} className="text-rose-600" />
+              Danger Zone
             </h3>
             <div className="space-y-4">
-              <button 
-                onClick={handleClearAll}
-                disabled={isSyncing}
-                className="w-full flex items-center justify-center gap-2 border-2 border-rose-100 text-rose-600 hover:bg-rose-50 px-4 py-4 rounded-2xl font-bold transition-all disabled:opacity-50"
-              >
-                <Trash2 size={20} /> Wipe Election Database
+              <button onClick={handleClearAll} className="w-full flex items-center justify-center gap-2 border-2 border-rose-50 text-rose-600 hover:bg-rose-50 px-4 py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest transition-all">
+                Wipe Cloud Database
               </button>
-              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3">
-                <AlertTriangle className="text-amber-500 shrink-0" />
-                <p className="text-xs text-amber-800 leading-relaxed">
-                  <strong>Warning:</strong> Clearing the database is irreversible. All student tokens currently in circulation will be deleted from Supabase and become invalid.
+              <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 flex gap-3">
+                <AlertTriangle className="text-rose-500 shrink-0" />
+                <p className="text-[9px] text-rose-800 font-bold uppercase leading-relaxed tracking-wider">
+                  Caution: This deletes all live tokens. Distributed QR codes will be invalidated immediately.
                 </p>
               </div>
             </div>

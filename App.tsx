@@ -49,7 +49,6 @@ const App: React.FC = () => {
 
     fetchInitialData();
 
-    // Subscribe to real-time changes
     const channel = supabase
       .channel('voter-changes')
       .on(
@@ -58,7 +57,6 @@ const App: React.FC = () => {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             setVoters(prev => {
-               // Check if already exists to avoid duplicates in state
                if (prev.some(v => v.id === payload.new.id)) return prev;
                return [...prev, payload.new as Voter];
             });
@@ -78,7 +76,6 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Offline persistence fallback
   useEffect(() => {
     if (voters.length > 0) {
       localStorage.setItem('ipsa_voters', JSON.stringify(voters));
@@ -125,7 +122,7 @@ const App: React.FC = () => {
       }, 5000);
     } catch (error) {
       console.error("Submission failed:", error);
-      alert("Failed to submit vote. Check your connection or Supabase RLS policies.");
+      alert("Failed to submit vote. Check your connection.");
     }
   };
 
@@ -141,12 +138,8 @@ const App: React.FC = () => {
 
   const syncVotersToDb = async (newVoters: Voter[]) => {
     if (supabase) {
-      console.log("Attempting bulk sync to Supabase...", newVoters.length, "voters");
       const { error } = await supabase.from('voters').upsert(newVoters, { onConflict: 'id' });
-      if (error) {
-        console.error("Supabase Bulk Sync Error:", error);
-        throw error;
-      }
+      if (error) throw error;
     } else {
       setVoters(prev => [...prev, ...newVoters]);
     }
@@ -154,7 +147,6 @@ const App: React.FC = () => {
 
   const clearAllData = async () => {
     if (supabase) {
-      // Deletes all rows where ID matches anything (wildcard delete)
       const { error } = await supabase.from('voters').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       if (error) throw error;
       setVoters([]);
@@ -165,7 +157,7 @@ const App: React.FC = () => {
 
   if (loading && isSupabaseEnabled) {
     return (
-      <div className="min-h-screen bg-indigo-900 flex flex-col items-center justify-center text-white">
+      <div className="min-h-screen bg-[#7b2b2a] flex flex-col items-center justify-center text-white">
         <Loader2 className="animate-spin mb-4" size={48} />
         <h2 className="text-xl font-bold">Connecting to IPSA Supabase...</h2>
       </div>
@@ -173,21 +165,21 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-indigo-900 text-white p-4 shadow-lg flex justify-between items-center no-print">
+    <div className="min-h-screen bg-[#faf7f2] flex flex-col">
+      <header className="bg-[#7b2b2a] text-[#fdfaf6] p-4 shadow-xl flex justify-between items-center no-print border-b-4 border-[#c5a059]">
         <div 
-          className="flex items-center gap-2 cursor-pointer" 
+          className="flex items-center gap-3 cursor-pointer" 
           onClick={() => !adminAuthenticated && setView('voter-portal')}
         >
-          <div className="bg-white p-1 rounded">
+          <div className="bg-white p-1 rounded-lg border border-[#c5a059]">
             <img src="https://picsum.photos/40/40" alt="Logo" className="w-8 h-8 rounded-sm" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight">IPSA Student Council</h1>
+          <h1 className="text-lg md:text-xl font-bold tracking-tight uppercase">International Program Student Association</h1>
         </div>
 
         <div className="flex gap-4 items-center">
           {adminAuthenticated && (
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${dbConnected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+            <div className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${dbConnected ? 'bg-[#c5a059]/20 text-[#c5a059]' : 'bg-rose-500/20 text-rose-400'}`}>
               {dbConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
               {dbConnected ? 'Sync Active' : 'Offline Mode'}
             </div>
@@ -196,7 +188,7 @@ const App: React.FC = () => {
           {view === 'admin-dashboard' ? (
             <button 
               onClick={() => { setAdminAuthenticated(false); setView('voter-portal'); }}
-              className="flex items-center gap-1 text-sm bg-indigo-800 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1 text-sm bg-[#5a1f1e] hover:bg-[#c5a059] hover:text-[#7b2b2a] px-3 py-1.5 rounded-lg transition-all font-bold"
             >
               <LogOut size={16} />
               Logout
@@ -204,7 +196,7 @@ const App: React.FC = () => {
           ) : (
             <button 
               onClick={() => adminAuthenticated ? setView('admin-dashboard') : setView('admin-login')}
-              className="flex items-center gap-1 text-sm text-indigo-200 hover:text-white transition-colors"
+              className="flex items-center gap-1 text-sm text-[#c5a059] hover:text-white transition-colors"
             >
               <ShieldCheck size={18} />
               Admin
@@ -215,8 +207,8 @@ const App: React.FC = () => {
 
       <main className="flex-1 container mx-auto px-4 py-8 relative">
         {!dbConnected && view !== 'admin-login' && !adminAuthenticated && (
-          <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500">
-            ⚠️ {isSupabaseEnabled ? 'Synchronizing with database...' : 'The system is in offline mode. Local storage only.'}
+          <div className="bg-[#c5a059]/10 border-l-4 border-[#c5a059] text-[#7b2b2a] p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500">
+            ⚠️ Synchronizing with election database...
           </div>
         )}
 
@@ -236,13 +228,13 @@ const App: React.FC = () => {
 
         {view === 'success' && (
           <div className="max-w-md mx-auto mt-20 text-center animate-in fade-in zoom-in duration-500">
-            <div className="bg-white p-10 rounded-2xl shadow-xl border border-indigo-50">
-              <CheckCircle2 size={80} className="text-emerald-500 mx-auto mb-6" />
+            <div className="bg-white p-10 rounded-2xl shadow-2xl border-t-8 border-[#7b2b2a]">
+              <CheckCircle2 size={80} className="text-[#c5a059] mx-auto mb-6" />
               <h2 className="text-3xl font-bold text-slate-800 mb-2">Vote Submitted!</h2>
-              <p className="text-slate-500 mb-8">Thank you for participating in the 2025 IPSA Student Council Election. Your voice has been shared across all devices.</p>
+              <p className="text-slate-500 mb-8">Thank you for participating. Your voice has been recorded in the IPSA secure cloud.</p>
               <button 
                 onClick={() => setView('voter-portal')}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-md active:scale-[0.98]"
+                className="w-full bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-[0.98]"
               >
                 Back to Home
               </button>
@@ -252,13 +244,13 @@ const App: React.FC = () => {
 
         {view === 'admin-login' && (
           <div className="max-w-md mx-auto mt-20">
-            <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+            <div className="bg-white p-8 rounded-2xl shadow-xl border-t-8 border-[#c5a059]">
               <div className="flex justify-center mb-6">
-                <div className="bg-indigo-100 p-4 rounded-full">
-                  <ShieldCheck size={40} className="text-indigo-600" />
+                <div className="bg-[#faf7f2] p-4 rounded-full border border-[#c5a059]">
+                  <ShieldCheck size={40} className="text-[#7b2b2a]" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">Admin Access</h2>
+              <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center uppercase tracking-tight">Admin Gate</h2>
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const key = (e.currentTarget.elements.namedItem('adminKey') as HTMLInputElement).value;
@@ -268,18 +260,18 @@ const App: React.FC = () => {
               }}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Passphrase</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-widest">Authentication Passphrase</label>
                     <input 
                       name="adminKey"
                       type="password" 
                       placeholder="••••••••"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[#faf7f2] focus:border-[#c5a059] outline-none transition-all"
                       autoFocus
                     />
                   </div>
                   <button 
                     type="submit"
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-md shadow-indigo-100"
+                    className="w-full bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white font-bold py-3 rounded-xl transition-all shadow-md"
                   >
                     Authenticate
                   </button>
@@ -306,12 +298,13 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="bg-slate-50 border-t border-slate-200 p-6 no-print">
+      <footer className="bg-[#faf7f2] border-t border-[#c5a059]/20 p-6 no-print">
         <div className="container mx-auto text-center">
-          <p className="text-slate-400 text-sm">
-            &copy; 2025 IPSA Student Council Presidential Election Portal. 
+          <p className="text-[#7b2b2a]/60 text-sm font-medium">
+            &copy; 2026 Hisyam. 
             <br className="sm:hidden" />
-            Designed for secure and transparent global voting.
+            <span className="hidden sm:inline"> | </span>
+            Secured for IPSA Global Elections.
           </p>
         </div>
       </footer>
