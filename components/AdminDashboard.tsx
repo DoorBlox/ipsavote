@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
 import { Voter, UserRole } from '../types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from '../constants';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2, XCircle, FileText } from 'lucide-react';
 
 interface AdminDashboardProps {
   voters: Voter[];
@@ -16,6 +15,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'stats' | 'voters' | 'manage'>('stats');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const maleElectionData = useMemo(() => {
     return MALE_CANDIDATES.map(c => ({
@@ -47,56 +47,81 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
     if (!file) return;
 
     setIsSyncing(true);
+    setUploadStatus(null);
+    
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      const lines = text.split('\n');
-      const newVoters: Voter[] = [];
-      
-      for (let i = 1; i < lines.length; i++) {
-        const parts = lines[i].split(',').map(p => p.trim());
-        if (parts.length < 2) continue;
-
-        const [no, name, roleStr] = parts;
-        const role = roleStr?.toLowerCase() as UserRole;
-        
-        if (Object.values(UserRole).includes(role)) {
-          newVoters.push({
-            id: crypto.randomUUID(),
-            name: name || `Voter ${no}`,
-            role: role,
-            token: generateToken(),
-            used: false,
-            maleVote: null,
-            femaleVote: null
-          });
-        }
-      }
-      
       try {
+        const text = event.target?.result as string;
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+        if (lines.length < 2) throw new Error("CSV file is empty or missing data rows.");
+
+        const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+        const nameIdx = headers.indexOf('name');
+        const roleIdx = headers.indexOf('role');
+
+        if (nameIdx === -1 || roleIdx === -1) {
+          throw new Error("CSV must have 'Name' and 'Role' columns.");
+        }
+
+        const newVoters: Voter[] = [];
+        const validRoles = Object.values(UserRole) as string[];
+        
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(',').map(p => p.trim());
+          if (parts.length <= Math.max(nameIdx, roleIdx)) continue;
+
+          const name = parts[nameIdx];
+          const roleRaw = parts[roleIdx].toLowerCase();
+          
+          if (validRoles.includes(roleRaw)) {
+            newVoters.push({
+              id: crypto.randomUUID(),
+              name: name || `Voter ${i}`,
+              role: roleRaw as UserRole,
+              token: generateToken(),
+              used: false,
+              maleVote: null,
+              femaleVote: null
+            });
+          }
+        }
+        
+        if (newVoters.length === 0) {
+          throw new Error("No valid voters found. Check that roles are 'male', 'female', or 'teacher'.");
+        }
+
         await setVoters(newVoters);
-      } catch (err) {
-        console.error("Failed to sync new voters:", err);
+        setUploadStatus({ type: 'success', message: `Successfully synced ${newVoters.length} voters to Supabase!` });
+      } catch (err: any) {
+        console.error("CSV Processing Error:", err);
+        setUploadStatus({ type: 'error', message: err.message || "Failed to process CSV file." });
       } finally {
         setIsSyncing(false);
+        // Reset input
+        e.target.value = '';
       }
+    };
+    reader.onerror = () => {
+      setUploadStatus({ type: 'error', message: "Failed to read file." });
+      setIsSyncing(false);
     };
     reader.readAsText(file);
   };
 
   const exportCSV = () => {
-    const header = "No,Name,Role,Token,Used,Male Vote,Female Vote\n";
-    const rows = voters.map((v, i) => {
+    const header = "Name,Role,Token,Used,Male Vote,Female Vote\n";
+    const rows = voters.map((v) => {
       const maleCand = MALE_CANDIDATES.find(c => c.id === v.maleVote)?.name || '';
       const femaleCand = FEMALE_CANDIDATES.find(c => c.id === v.femaleVote)?.name || '';
-      return `${i+1},${v.name},${v.role},${v.token},${v.used ? 'Yes' : 'No'},${maleCand},${femaleCand}`;
+      return `${v.name},${v.role},${v.token},${v.used ? 'Yes' : 'No'},${maleCand},${femaleCand}`;
     }).join('\n');
     
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ipsa_election_data_${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `ipsa_election_results.csv`;
     a.click();
   };
 
@@ -106,8 +131,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
       try {
         await onClearAll();
         localStorage.removeItem('ipsa_voters');
+        setUploadStatus({ type: 'success', message: "All cloud data cleared." });
       } catch (err) {
-        console.error("Failed to clear data:", err);
+        setUploadStatus({ type: 'error', message: "Failed to clear cloud data." });
       } finally {
         setIsSyncing(false);
       }
@@ -127,12 +153,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
             <h2 className="text-3xl font-bold text-slate-800">Admin Control Center</h2>
             <p className="text-slate-500">Monitor results and manage voter credentials.</p>
           </div>
-          {isSyncing && (
-            <div className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full flex items-center gap-2 text-xs font-bold animate-pulse">
-              <Loader2 size={12} className="animate-spin" />
-              Syncing...
-            </div>
-          )}
         </div>
         <div className="flex gap-2">
           <button 
@@ -155,6 +175,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
           </button>
         </div>
       </div>
+
+      {uploadStatus && (
+        <div className={`p-4 rounded-2xl border flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 ${uploadStatus.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'}`}>
+          {uploadStatus.type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+          <span className="font-medium text-sm">{uploadStatus.message}</span>
+          <button onClick={() => setUploadStatus(null)} className="ml-auto opacity-50 hover:opacity-100">
+            <XCircle size={16} />
+          </button>
+        </div>
+      )}
 
       {activeTab === 'stats' && (
         <div className="grid md:grid-cols-2 gap-8">
@@ -292,11 +322,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
       {activeTab === 'manage' && (
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-            <h3 className="text-xl font-bold text-slate-800">Supabase Sync Management</h3>
+            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <Upload size={20} className="text-indigo-600" />
+              Voter Bulk Import
+            </h3>
             <div className="space-y-4">
               <div className="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 flex flex-col items-center text-center">
-                <Upload className="text-slate-400 mb-4" size={32} />
-                <p className="text-sm font-medium text-slate-600 mb-4">Upload CSV of student names and roles to generate tokens in the cloud.</p>
+                <FileText className="text-slate-400 mb-2" size={32} />
+                <p className="text-sm font-medium text-slate-600 mb-1">Upload CSV file</p>
+                <p className="text-[10px] text-slate-400 mb-4 font-mono">Format: Name, Role (male/female/teacher)</p>
+                
                 <input 
                   type="file" 
                   accept=".csv" 
@@ -307,9 +342,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                 />
                 <label 
                   htmlFor="csv-upload"
-                  className={`bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-all shadow-sm ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+                  className={`bg-white border border-slate-200 hover:bg-slate-50 px-6 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all shadow-sm flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
                 >
-                  {isSyncing ? 'Processing...' : 'Choose File'}
+                  {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                  {isSyncing ? 'Syncing...' : 'Select CSV File'}
                 </label>
               </div>
               
@@ -318,32 +354,35 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                   onClick={exportCSV}
                   className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md shadow-indigo-100"
                 >
-                  <Download size={18} /> Export CSV
+                  <Download size={18} /> Export Data
                 </button>
                 <button 
                   onClick={onOpenQRSheet}
                   className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md shadow-emerald-100"
                 >
-                  <Printer size={18} /> Print QR Sheet
+                  <Printer size={18} /> Print Tokens
                 </button>
               </div>
             </div>
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-            <h3 className="text-xl font-bold text-slate-800">Supabase Controls</h3>
+            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <Trash2 size={20} className="text-rose-600" />
+              Cloud Maintenance
+            </h3>
             <div className="space-y-4">
               <button 
                 onClick={handleClearAll}
                 disabled={isSyncing}
                 className="w-full flex items-center justify-center gap-2 border-2 border-rose-100 text-rose-600 hover:bg-rose-50 px-4 py-4 rounded-2xl font-bold transition-all disabled:opacity-50"
               >
-                <Trash2 size={20} /> {isSyncing ? 'Deleting...' : 'Wipe All Cloud Data'}
+                <Trash2 size={20} /> Wipe Election Database
               </button>
               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3">
                 <AlertTriangle className="text-amber-500 shrink-0" />
-                <p className="text-xs text-amber-800">
-                  This action clears the Supabase <code>voters</code> table. All QR tokens distributed to students will become invalid immediately.
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>Warning:</strong> Clearing the database is irreversible. All student tokens currently in circulation will be deleted from Supabase and become invalid.
                 </p>
               </div>
             </div>

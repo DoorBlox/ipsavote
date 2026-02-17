@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Voter, ViewState } from './types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from './constants';
@@ -39,7 +38,7 @@ const App: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase.from('voters').select('*');
       if (error) {
-        console.error("Error fetching voters:", error);
+        console.error("Supabase Error:", error);
         setDbConnected(false);
       } else {
         setVoters(data || []);
@@ -58,7 +57,11 @@ const App: React.FC = () => {
         { event: '*', schema: 'public', table: 'voters' },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setVoters(prev => [...prev, payload.new as Voter]);
+            setVoters(prev => {
+               // Check if already exists to avoid duplicates in state
+               if (prev.some(v => v.id === payload.new.id)) return prev;
+               return [...prev, payload.new as Voter];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setVoters(prev => prev.map(v => v.id === payload.new.id ? payload.new as Voter : v));
           } else if (payload.eventType === 'DELETE') {
@@ -75,7 +78,7 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Offline persistence
+  // Offline persistence fallback
   useEffect(() => {
     if (voters.length > 0) {
       localStorage.setItem('ipsa_voters', JSON.stringify(voters));
@@ -108,7 +111,6 @@ const App: React.FC = () => {
         
         if (error) throw error;
       } else {
-        // Local fallback
         const updatedVoters = voters.map(v => 
           v.id === activeVoter.id ? { ...v, used: true, maleVote: maleId, femaleVote: femaleId } : v
         );
@@ -123,7 +125,7 @@ const App: React.FC = () => {
       }, 5000);
     } catch (error) {
       console.error("Submission failed:", error);
-      alert("Failed to submit vote. Please check your internet connection.");
+      alert("Failed to submit vote. Check your connection or Supabase RLS policies.");
     }
   };
 
@@ -139,22 +141,21 @@ const App: React.FC = () => {
 
   const syncVotersToDb = async (newVoters: Voter[]) => {
     if (supabase) {
-      // For bulk updates, we clear and re-insert or use upsert
-      // Upsert is safer for maintaining existing records
-      const { error } = await supabase.from('voters').upsert(newVoters);
+      console.log("Attempting bulk sync to Supabase...", newVoters.length, "voters");
+      const { error } = await supabase.from('voters').upsert(newVoters, { onConflict: 'id' });
       if (error) {
-        console.error("Bulk sync error:", error);
+        console.error("Supabase Bulk Sync Error:", error);
         throw error;
       }
     } else {
-      setVoters(newVoters);
+      setVoters(prev => [...prev, ...newVoters]);
     }
   };
 
   const clearAllData = async () => {
     if (supabase) {
-      // In Supabase, delete all rows
-      const { error } = await supabase.from('voters').delete().neq('id', '0');
+      // Deletes all rows where ID matches anything (wildcard delete)
+      const { error } = await supabase.from('voters').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       if (error) throw error;
       setVoters([]);
     } else {
@@ -215,7 +216,7 @@ const App: React.FC = () => {
       <main className="flex-1 container mx-auto px-4 py-8 relative">
         {!dbConnected && view !== 'admin-login' && !adminAuthenticated && (
           <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500">
-            ⚠️ {isSupabaseEnabled ? 'Reconnecting to Supabase...' : 'The system is in offline mode. Local storage only.'}
+            ⚠️ {isSupabaseEnabled ? 'Synchronizing with database...' : 'The system is in offline mode. Local storage only.'}
           </div>
         )}
 
