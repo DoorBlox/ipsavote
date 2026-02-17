@@ -1,12 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, Keyboard, ArrowRight, Loader2, Info, CameraOff } from 'lucide-react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 interface VoterPortalProps {
   onAuth: (token: string) => { success: boolean; error?: string };
 }
-
-declare const Html5QrcodeScanner: any;
 
 const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
   const [token, setToken] = useState('');
@@ -29,7 +28,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           setToken(decodedText);
           handleManualSubmit(decodedText);
         }, (error: any) => {
-          // Noise
+          // Continuous scanning...
         });
         
         scannerRef.current = scanner;
@@ -39,9 +38,10 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
       }
     };
 
-    startScanner();
+    const timer = setTimeout(startScanner, 100);
 
     return () => {
+      clearTimeout(timer);
       if (scannerRef.current) {
         scannerRef.current.clear().catch(console.error);
         scannerRef.current = null;
@@ -94,7 +94,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
             </div>
             
             {!scannerError && !isLoading && (
-              <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-1 bg-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-[scan_2s_ease-in-out_infinite] pointer-events-none rounded-full" />
+              <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 h-1 bg-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-pulse pointer-events-none rounded-full" />
             )}
           </div>
           
@@ -120,7 +120,6 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
                   value={token}
                   onChange={(e) => setToken(e.target.value.toUpperCase())}
                   placeholder="ABC-1234"
-                  /* FIXED: Changed text color to text-slate-900 and background for visibility */
                   className="w-full px-4 py-4 text-2xl tracking-widest font-mono text-center uppercase rounded-2xl border-2 border-slate-100 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 outline-none transition-all bg-white text-slate-900 shadow-sm"
                 />
               </div>
@@ -146,19 +145,12 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
               <Info className="text-indigo-400 shrink-0 mt-0.5" size={18} />
               <div className="text-xs text-indigo-900/60 leading-relaxed">
                 <p className="font-bold text-indigo-900/80 mb-1">Voting Privacy</p>
-                Your vote is completely anonymous. The system only tracks that your token has been used, not who you voted for.
+                Your vote is completely anonymous. The system only tracks that your token has been used.
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes scan {
-          0%, 100% { top: 15%; opacity: 0.2; }
-          50% { top: 85%; opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };
