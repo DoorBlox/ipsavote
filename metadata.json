@@ -1,0 +1,7 @@
+{
+  "name": "IPSA Council Vote",
+  "description": "A secure presidential election platform for school student associations, featuring role-based voting (male, female, teacher), QR token authentication, and a real-time admin dashboard.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
