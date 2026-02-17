@@ -9,9 +9,10 @@ interface AdminDashboardProps {
   voters: Voter[];
   setVoters: (newVoters: Voter[]) => Promise<void>;
   onOpenQRSheet: () => void;
+  onClearAll: () => Promise<void>;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOpenQRSheet }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOpenQRSheet, onClearAll }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'stats' | 'voters' | 'manage'>('stats');
   const [isSyncing, setIsSyncing] = useState(false);
@@ -73,7 +74,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
       }
       
       try {
-        await setVoters([...voters, ...newVoters]);
+        await setVoters(newVoters);
       } catch (err) {
         console.error("Failed to sync new voters:", err);
       } finally {
@@ -99,12 +100,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
     a.click();
   };
 
-  const clearAllData = async () => {
+  const handleClearAll = async () => {
     if (confirm('CRITICAL: Are you sure you want to permanently delete all election data across ALL devices?')) {
       setIsSyncing(true);
       try {
-        await setVoters([]);
+        await onClearAll();
         localStorage.removeItem('ipsa_voters');
+      } catch (err) {
+        console.error("Failed to clear data:", err);
       } finally {
         setIsSyncing(false);
       }
@@ -155,7 +158,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
 
       {activeTab === 'stats' && (
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Quick Summary Cards */}
           <div className="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Total Voters', val: voters.length, icon: Users, color: 'bg-blue-500' },
@@ -175,7 +177,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
             ))}
           </div>
 
-          {/* Male Election Chart */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
               <div className="w-2 h-6 bg-indigo-600 rounded-full" />
@@ -197,7 +198,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
             </div>
           </div>
 
-          {/* Female Election Chart */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
               <div className="w-2 h-6 bg-rose-500 rounded-full" />
@@ -292,11 +292,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
       {activeTab === 'manage' && (
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-            <h3 className="text-xl font-bold text-slate-800">Bulk Data Management</h3>
+            <h3 className="text-xl font-bold text-slate-800">Supabase Sync Management</h3>
             <div className="space-y-4">
               <div className="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 flex flex-col items-center text-center">
                 <Upload className="text-slate-400 mb-4" size={32} />
-                <p className="text-sm font-medium text-slate-600 mb-4">Upload CSV of student names and roles (male/female/teacher) to auto-generate tokens.</p>
+                <p className="text-sm font-medium text-slate-600 mb-4">Upload CSV of student names and roles to generate tokens in the cloud.</p>
                 <input 
                   type="file" 
                   accept=".csv" 
@@ -318,7 +318,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                   onClick={exportCSV}
                   className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md shadow-indigo-100"
                 >
-                  <Download size={18} /> Export Data
+                  <Download size={18} /> Export CSV
                 </button>
                 <button 
                   onClick={onOpenQRSheet}
@@ -331,19 +331,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-            <h3 className="text-xl font-bold text-slate-800">System Controls</h3>
+            <h3 className="text-xl font-bold text-slate-800">Supabase Controls</h3>
             <div className="space-y-4">
               <button 
-                onClick={clearAllData}
+                onClick={handleClearAll}
                 disabled={isSyncing}
                 className="w-full flex items-center justify-center gap-2 border-2 border-rose-100 text-rose-600 hover:bg-rose-50 px-4 py-4 rounded-2xl font-bold transition-all disabled:opacity-50"
               >
-                <Trash2 size={20} /> {isSyncing ? 'Deleting...' : 'Reset All Election Data'}
+                <Trash2 size={20} /> {isSyncing ? 'Deleting...' : 'Wipe All Cloud Data'}
               </button>
               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3">
                 <AlertTriangle className="text-amber-500 shrink-0" />
                 <p className="text-xs text-amber-800">
-                  Resetting will wipe all voters from the CLOUD. This will be reflected on all student devices immediately. Always export a CSV backup before performing a reset.
+                  This action clears the Supabase <code>voters</code> table. All QR tokens distributed to students will become invalid immediately.
                 </p>
               </div>
             </div>

@@ -7,30 +7,15 @@ import Ballot from './components/Ballot';
 import AdminDashboard from './components/AdminDashboard';
 import QRSheet from './components/QRSheet';
 import { CheckCircle2, ShieldCheck, LogOut, Loader2, Wifi, WifiOff } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, onSnapshot, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { createClient } from '@supabase/supabase-js';
 
-// Configuration - Vite automatically populates import.meta.env with VITE_ variables
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
+// Configuration
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Debug: Log if keys are missing (only in development)
-if (import.meta.env.DEV) {
-  if (!firebaseConfig.apiKey) console.warn("Firebase API Key is missing!");
-  if (!firebaseConfig.projectId) console.warn("Firebase Project ID is missing!");
-}
-
-// Initialize Firebase only if config is complete
-const isFirebaseEnabled = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
-const app = isFirebaseEnabled ? initializeApp(firebaseConfig) : null;
-const db = app ? getFirestore(app) : null;
+// Initialize Supabase only if config is complete
+const isSupabaseEnabled = !!supabaseUrl && !!supabaseAnonKey;
+const supabase = isSupabaseEnabled ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('voter-portal');
@@ -38,10 +23,11 @@ const App: React.FC = () => {
   const [activeVoter, setActiveVoter] = useState<Voter | null>(null);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
   const [dbConnected, setDbConnected] = useState(false);
-  const [loading, setLoading] = useState(isFirebaseEnabled);
+  const [loading, setLoading] = useState(isSupabaseEnabled);
 
+  // Initial Fetch and Real-time Subscription
   useEffect(() => {
-    if (!db) {
+    if (!supabase) {
       const stored = localStorage.getItem('ipsa_voters');
       if (stored) setVoters(JSON.parse(stored));
       setLoading(false);
@@ -49,25 +35,47 @@ const App: React.FC = () => {
       return;
     }
 
-    setLoading(true);
-    const unsub = onSnapshot(collection(db, 'voters'), 
-      (snapshot) => {
-        const voterData: Voter[] = [];
-        snapshot.forEach((doc) => voterData.push({ ...doc.data() } as Voter));
-        setVoters(voterData);
-        setDbConnected(true);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Firestore sync error:", error);
+    const fetchInitialData = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('voters').select('*');
+      if (error) {
+        console.error("Error fetching voters:", error);
         setDbConnected(false);
-        setLoading(false);
+      } else {
+        setVoters(data || []);
+        setDbConnected(true);
       }
-    );
+      setLoading(false);
+    };
 
-    return () => unsub();
+    fetchInitialData();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('voter-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'voters' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setVoters(prev => [...prev, payload.new as Voter]);
+          } else if (payload.eventType === 'UPDATE') {
+            setVoters(prev => prev.map(v => v.id === payload.new.id ? payload.new as Voter : v));
+          } else if (payload.eventType === 'DELETE') {
+            setVoters(prev => prev.filter(v => v.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe((status) => {
+        setDbConnected(status === 'SUBSCRIBED');
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
+  // Offline persistence
   useEffect(() => {
     if (voters.length > 0) {
       localStorage.setItem('ipsa_voters', JSON.stringify(voters));
@@ -88,14 +96,19 @@ const App: React.FC = () => {
     if (!activeVoter) return;
 
     try {
-      if (db) {
-        const voterRef = doc(db, 'voters', activeVoter.id);
-        await updateDoc(voterRef, {
-          used: true,
-          maleVote: maleId,
-          femaleVote: femaleId
-        });
+      if (supabase) {
+        const { error } = await supabase
+          .from('voters')
+          .update({
+            used: true,
+            maleVote: maleId,
+            femaleVote: femaleId
+          })
+          .eq('id', activeVoter.id);
+        
+        if (error) throw error;
       } else {
+        // Local fallback
         const updatedVoters = voters.map(v => 
           v.id === activeVoter.id ? { ...v, used: true, maleVote: maleId, femaleVote: femaleId } : v
         );
@@ -124,24 +137,36 @@ const App: React.FC = () => {
     return false;
   };
 
-  const setVotersInDb = async (newVoters: Voter[]) => {
-    if (db) {
-      const batch = writeBatch(db);
-      newVoters.forEach(v => {
-        const ref = doc(db, 'voters', v.id);
-        batch.set(ref, v);
-      });
-      await batch.commit();
+  const syncVotersToDb = async (newVoters: Voter[]) => {
+    if (supabase) {
+      // For bulk updates, we clear and re-insert or use upsert
+      // Upsert is safer for maintaining existing records
+      const { error } = await supabase.from('voters').upsert(newVoters);
+      if (error) {
+        console.error("Bulk sync error:", error);
+        throw error;
+      }
     } else {
       setVoters(newVoters);
     }
   };
 
-  if (loading && isFirebaseEnabled) {
+  const clearAllData = async () => {
+    if (supabase) {
+      // In Supabase, delete all rows
+      const { error } = await supabase.from('voters').delete().neq('id', '0');
+      if (error) throw error;
+      setVoters([]);
+    } else {
+      setVoters([]);
+    }
+  };
+
+  if (loading && isSupabaseEnabled) {
     return (
       <div className="min-h-screen bg-indigo-900 flex flex-col items-center justify-center text-white">
         <Loader2 className="animate-spin mb-4" size={48} />
-        <h2 className="text-xl font-bold">Connecting to IPSA Cloud...</h2>
+        <h2 className="text-xl font-bold">Connecting to IPSA Supabase...</h2>
       </div>
     );
   }
@@ -163,7 +188,7 @@ const App: React.FC = () => {
           {adminAuthenticated && (
             <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${dbConnected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
               {dbConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
-              {dbConnected ? 'Cloud Active' : 'Offline Mode'}
+              {dbConnected ? 'Sync Active' : 'Offline Mode'}
             </div>
           )}
           
@@ -190,7 +215,7 @@ const App: React.FC = () => {
       <main className="flex-1 container mx-auto px-4 py-8 relative">
         {!dbConnected && view !== 'admin-login' && !adminAuthenticated && (
           <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500">
-            ⚠️ {isFirebaseEnabled ? 'Connecting to database...' : 'The system is in offline mode. Local storage only.'}
+            ⚠️ {isSupabaseEnabled ? 'Reconnecting to Supabase...' : 'The system is in offline mode. Local storage only.'}
           </div>
         )}
 
@@ -266,8 +291,9 @@ const App: React.FC = () => {
         {view === 'admin-dashboard' && adminAuthenticated && (
           <AdminDashboard 
             voters={voters} 
-            setVoters={setVotersInDb} 
+            setVoters={syncVotersToDb} 
             onOpenQRSheet={() => setView('qr-sheet')}
+            onClearAll={clearAllData}
           />
         )}
 
