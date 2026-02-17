@@ -31,8 +31,8 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
             setToken(decodedText);
             handleManualSubmit(decodedText);
           },
-          (errorMessage) => {
-            // This is called constantly while scanning, we don't need to show it unless it's a hard error
+          (_errorMessage) => {
+            // Ignored - frequent background polling error messages
           }
         );
         setIsCameraReady(true);
@@ -42,10 +42,10 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
       }
     };
 
-    const timer = setTimeout(initializeScanner, 500);
+    // No delay needed for professional feel
+    initializeScanner();
 
     return () => {
-      clearTimeout(timer);
       if (html5QrCodeRef.current) {
         html5QrCodeRef.current.stop().catch(err => console.error("Error stopping scanner", err));
       }
@@ -77,7 +77,6 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
 
       <div className="grid md:grid-cols-5 gap-8 items-start">
         <div className="md:col-span-3 bg-white p-6 rounded-3xl shadow-2xl border-2 border-[#faf7f2] relative overflow-hidden">
-          {/* Decorative Corner */}
           <div className="absolute top-0 right-0 w-16 h-16 bg-[#c5a059] clip-path-polygon-[100%_0,100%_100%,0_0] opacity-10"></div>
           
           <div className="flex items-center justify-between mb-6">

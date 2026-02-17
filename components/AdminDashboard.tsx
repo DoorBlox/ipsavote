@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Voter, UserRole } from '../types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from '../constants';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2, XCircle, FileText } from 'lucide-react';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Users, Ticket, BarChart3, Upload, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2, XCircle, FileText } from 'lucide-react';
 
 interface AdminDashboardProps {
   voters: Voter[];
@@ -270,8 +270,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                 <FileText className="text-slate-300 mb-2" size={32} />
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">CSV (Name, Role)</p>
                 <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" id="csv-upload" />
-                <label htmlFor="csv-upload" className="bg-[#7b2b2a] text-[#fdfaf6] px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-[#5a1f1e] shadow-lg transition-all">
-                  Upload Batch
+                <label htmlFor="csv-upload" className={`bg-[#7b2b2a] text-[#fdfaf6] px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-[#5a1f1e] shadow-lg transition-all ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}>
+                  {isSyncing ? 'Processing...' : 'Upload Batch'}
                 </label>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -291,7 +291,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
               Danger Zone
             </h3>
             <div className="space-y-4">
-              <button onClick={handleClearAll} className="w-full flex items-center justify-center gap-2 border-2 border-rose-50 text-rose-600 hover:bg-rose-50 px-4 py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest transition-all">
+              <button 
+                onClick={handleClearAll} 
+                disabled={isSyncing}
+                className="w-full flex items-center justify-center gap-2 border-2 border-rose-100 text-rose-600 hover:bg-rose-50 px-4 py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest transition-all disabled:opacity-50"
+              >
+                {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                 Wipe Cloud Database
               </button>
               <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 flex gap-3">

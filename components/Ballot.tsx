@@ -31,7 +31,7 @@ const Ballot: React.FC<BallotProps> = ({ voter, maleCandidates, femaleCandidates
   };
 
   return (
-    <div className="max-w-4xl mx-auto animate-in slide-in-from-right-4 duration-500">
+    <div className="max-w-5xl mx-auto animate-in slide-in-from-right-4 duration-500">
       <div className="bg-[#7b2b2a] rounded-t-3xl p-8 text-white border-b-8 border-[#c5a059]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -48,47 +48,48 @@ const Ballot: React.FC<BallotProps> = ({ voter, maleCandidates, femaleCandidates
         </div>
       </div>
 
-      <div className="bg-white rounded-b-3xl shadow-2xl p-8 space-y-12">
+      <div className="bg-white rounded-b-3xl shadow-2xl p-8 sm:p-12 space-y-16">
         {/* Male Election Section */}
         {(voter.role === UserRole.MALE || voter.role === UserRole.TEACHER) && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="flex items-center justify-between border-b-2 border-[#faf7f2] pb-4">
-              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Male Presidential Ticket</h3>
-              <div className="bg-[#c5a059]/10 text-[#7b2b2a] text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-[#c5a059]/20">Single Choice</div>
+              <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Male Presidential Ticket</h3>
+              <div className="bg-[#c5a059]/10 text-[#7b2b2a] text-xs px-4 py-1.5 rounded-full font-black uppercase tracking-widest border border-[#c5a059]/20">Single Choice</div>
             </div>
             
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-8">
               {maleCandidates.map((candidate) => (
                 <div 
                   key={candidate.id}
                   onClick={() => setSelectedMale(candidate.id)}
                   className={`
-                    relative cursor-pointer group rounded-2xl border-2 transition-all p-5
+                    relative cursor-pointer group rounded-3xl border-2 transition-all p-6 sm:p-8
                     ${selectedMale === candidate.id 
-                      ? 'border-[#7b2b2a] bg-[#7b2b2a]/5 ring-8 ring-[#7b2b2a]/5 shadow-lg' 
-                      : 'border-[#faf7f2] bg-[#faf7f2]/30 hover:border-[#c5a059]/30'}
+                      ? 'border-[#7b2b2a] bg-[#7b2b2a]/5 ring-8 ring-[#7b2b2a]/5 shadow-xl' 
+                      : 'border-[#faf7f2] bg-[#faf7f2]/30 hover:border-[#c5a059]/30 hover:shadow-md'}
                   `}
                 >
-                  <div className="flex items-center gap-5 mb-5">
+                  <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
                     <div className="relative shrink-0">
                       <img 
                         src={candidate.imageUrl} 
                         alt={candidate.name} 
-                        className={`w-24 h-24 rounded-2xl object-cover shadow-lg transition-all ${selectedMale === candidate.id ? 'ring-4 ring-white' : ''}`}
+                        className={`w-44 h-44 sm:w-48 sm:h-48 rounded-3xl object-cover shadow-2xl transition-all duration-300 ${selectedMale === candidate.id ? 'ring-4 ring-white scale-105' : 'grayscale-[20%] group-hover:grayscale-0'}`}
                       />
                       {selectedMale === candidate.id && (
-                        <div className="absolute -top-2 -right-2 bg-[#7b2b2a] text-white p-1 rounded-full border-2 border-white shadow-xl">
-                          <Check size={18} strokeWidth={4} />
+                        <div className="absolute -top-3 -right-3 bg-[#7b2b2a] text-white p-2 rounded-full border-4 border-white shadow-2xl scale-110">
+                          <Check size={24} strokeWidth={4} />
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[9px] text-[#c5a059] font-black uppercase tracking-widest mb-1">Elite Candidates</p>
-                      <h4 className="text-lg font-black text-slate-900 leading-none truncate">{candidate.name}</h4>
-                      <div className="flex items-center gap-1.5 py-1">
-                        <span className="text-[#c5a059] font-black text-[10px] uppercase">&</span>
-                        <h4 className="text-lg font-black text-slate-900 leading-none truncate">{candidate.viceName}</h4>
+                    <div className="flex-1 text-center sm:text-left min-w-0">
+                      <p className="text-[11px] text-[#c5a059] font-black uppercase tracking-[0.2em] mb-3">IPSA ELITE TICKET</p>
+                      <h4 className="text-2xl font-black text-slate-900 leading-tight mb-1">{candidate.name}</h4>
+                      <div className="flex items-center justify-center sm:justify-start gap-2 py-2">
+                        <span className="text-[#c5a059] font-black text-xs uppercase">&</span>
+                        <h4 className="text-2xl font-black text-slate-900 leading-tight">{candidate.viceName}</h4>
                       </div>
+                      <div className="mt-4 opacity-40 text-[10px] font-bold uppercase tracking-widest">Candidate ID: {candidate.id}</div>
                     </div>
                   </div>
                 </div>
@@ -99,44 +100,45 @@ const Ballot: React.FC<BallotProps> = ({ voter, maleCandidates, femaleCandidates
 
         {/* Female Election Section */}
         {(voter.role === UserRole.FEMALE || voter.role === UserRole.TEACHER) && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="flex items-center justify-between border-b-2 border-[#faf7f2] pb-4">
-              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Female Presidential Ticket</h3>
-              <div className="bg-[#c5a059]/10 text-[#7b2b2a] text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-[#c5a059]/20">Single Choice</div>
+              <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Female Presidential Ticket</h3>
+              <div className="bg-[#c5a059]/10 text-[#7b2b2a] text-xs px-4 py-1.5 rounded-full font-black uppercase tracking-widest border border-[#c5a059]/20">Single Choice</div>
             </div>
             
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-8">
               {femaleCandidates.map((candidate) => (
                 <div 
                   key={candidate.id}
                   onClick={() => setSelectedFemale(candidate.id)}
                   className={`
-                    relative cursor-pointer group rounded-2xl border-2 transition-all p-5
+                    relative cursor-pointer group rounded-3xl border-2 transition-all p-6 sm:p-8
                     ${selectedFemale === candidate.id 
-                      ? 'border-[#7b2b2a] bg-[#7b2b2a]/5 ring-8 ring-[#7b2b2a]/5 shadow-lg' 
-                      : 'border-[#faf7f2] bg-[#faf7f2]/30 hover:border-[#c5a059]/30'}
+                      ? 'border-[#7b2b2a] bg-[#7b2b2a]/5 ring-8 ring-[#7b2b2a]/5 shadow-xl' 
+                      : 'border-[#faf7f2] bg-[#faf7f2]/30 hover:border-[#c5a059]/30 hover:shadow-md'}
                   `}
                 >
-                  <div className="flex items-center gap-5 mb-5">
+                  <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
                     <div className="relative shrink-0">
                       <img 
                         src={candidate.imageUrl} 
                         alt={candidate.name} 
-                        className={`w-24 h-24 rounded-2xl object-cover shadow-lg transition-all ${selectedFemale === candidate.id ? 'ring-4 ring-white' : ''}`}
+                        className={`w-44 h-44 sm:w-48 sm:h-48 rounded-3xl object-cover shadow-2xl transition-all duration-300 ${selectedFemale === candidate.id ? 'ring-4 ring-white scale-105' : 'grayscale-[20%] group-hover:grayscale-0'}`}
                       />
                       {selectedFemale === candidate.id && (
-                        <div className="absolute -top-2 -right-2 bg-[#7b2b2a] text-white p-1 rounded-full border-2 border-white shadow-xl">
-                          <Check size={18} strokeWidth={4} />
+                        <div className="absolute -top-3 -right-3 bg-[#7b2b2a] text-white p-2 rounded-full border-4 border-white shadow-2xl scale-110">
+                          <Check size={24} strokeWidth={4} />
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[9px] text-[#c5a059] font-black uppercase tracking-widest mb-1">Elite Candidates</p>
-                      <h4 className="text-lg font-black text-slate-900 leading-none truncate">{candidate.name}</h4>
-                      <div className="flex items-center gap-1.5 py-1">
-                        <span className="text-[#c5a059] font-black text-[10px] uppercase">&</span>
-                        <h4 className="text-lg font-black text-slate-900 leading-none truncate">{candidate.viceName}</h4>
+                    <div className="flex-1 text-center sm:text-left min-w-0">
+                      <p className="text-[11px] text-[#c5a059] font-black uppercase tracking-[0.2em] mb-3">IPSA ELITE TICKET</p>
+                      <h4 className="text-2xl font-black text-slate-900 leading-tight mb-1">{candidate.name}</h4>
+                      <div className="flex items-center justify-center sm:justify-start gap-2 py-2">
+                        <span className="text-[#c5a059] font-black text-xs uppercase">&</span>
+                        <h4 className="text-2xl font-black text-slate-900 leading-tight">{candidate.viceName}</h4>
                       </div>
+                      <div className="mt-4 opacity-40 text-[10px] font-bold uppercase tracking-widest">Candidate ID: {candidate.id}</div>
                     </div>
                   </div>
                 </div>
@@ -145,21 +147,22 @@ const Ballot: React.FC<BallotProps> = ({ voter, maleCandidates, femaleCandidates
           </div>
         )}
 
-        <div className="bg-[#faf7f2] p-4 rounded-2xl border border-[#c5a059]/20 flex items-start gap-3">
-          <AlertTriangle className="text-[#c5a059] shrink-0 mt-0.5" />
-          <p className="text-xs text-[#7b2b2a] font-medium leading-relaxed">
-            <strong className="uppercase tracking-wider">Finality Notice:</strong> Review your selection carefully. After clicking "Cast Official Ballot", the transaction is permanent and your token is consumed.
+        <div className="bg-[#faf7f2] p-6 rounded-3xl border-2 border-dashed border-[#c5a059]/30 flex items-start gap-4">
+          <AlertTriangle className="text-[#c5a059] shrink-0 mt-1" size={24} />
+          <p className="text-sm text-[#7b2b2a] font-bold leading-relaxed">
+            <strong className="uppercase tracking-[0.1em] block mb-1">Final Authorization Check:</strong> 
+            Verify your chosen candidates match the tickets above. By clicking "Cast Official Ballot", you are submitting your one-time digital signature to the IPSA secure database. This action is irreversible.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+        <div className="flex flex-col sm:flex-row items-center gap-6 pt-6">
           <button 
             disabled={!canSubmit()}
             onClick={() => onSubmit(selectedMale, selectedFemale)}
             className={`
-              w-full sm:flex-1 py-4 px-8 rounded-2xl font-black text-lg uppercase tracking-widest transition-all shadow-xl
+              w-full sm:flex-1 py-5 px-10 rounded-2xl font-black text-xl uppercase tracking-[0.15em] transition-all shadow-2xl
               ${canSubmit() 
-                ? 'bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white shadow-[#7b2b2a]/20 active:scale-[0.98]' 
+                ? 'bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white shadow-[#7b2b2a]/30 active:scale-[0.98]' 
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}
             `}
           >
@@ -167,9 +170,9 @@ const Ballot: React.FC<BallotProps> = ({ voter, maleCandidates, femaleCandidates
           </button>
           <button 
             onClick={onCancel}
-            className="w-full sm:w-auto py-4 px-10 text-[#7b2b2a]/60 hover:text-[#7b2b2a] font-black uppercase tracking-widest transition-all"
+            className="w-full sm:w-auto py-5 px-12 text-[#7b2b2a]/60 hover:text-[#7b2b2a] font-black uppercase tracking-widest transition-all"
           >
-            Exit Ballot
+            Cancel and Return
           </button>
         </div>
       </div>
