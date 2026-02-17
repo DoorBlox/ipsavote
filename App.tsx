@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Voter, ViewState } from './types';
-import { MALE_CANDIDATES, FEMALE_CANDIDATES } from './constants';
+import { MALE_CANDIDATES, FEMALE_CANDIDATES, APP_LOGO } from './constants';
 import VoterPortal from './components/VoterPortal';
 import Ballot from './components/Ballot';
 import AdminDashboard from './components/AdminDashboard';
@@ -162,7 +162,7 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#7b2b2a] flex flex-col items-center justify-center text-white">
         <Loader2 className="animate-spin mb-4" size={48} />
-        <h2 className="text-xl font-bold">Connecting to Association DB...</h2>
+        <h2 className="text-xl font-bold">Connecting to IPSA Database...</h2>
       </div>
     );
   }
@@ -175,7 +175,7 @@ const App: React.FC = () => {
           onClick={() => !adminAuthenticated && setView('voter-portal')}
         >
           <div className="bg-white p-1 rounded-lg border-2 border-[#c5a059] shadow-sm">
-            <img src="https://picsum.photos/seed/ipsa/80/80" alt="Logo" className="w-10 h-10 rounded-sm" />
+            <img src={APP_LOGO} alt="IPSA Logo" className="w-10 h-10 rounded-sm" />
           </div>
           <h1 className="text-lg md:text-xl font-extrabold tracking-tight uppercase">International Program Student Association</h1>
         </div>
@@ -236,7 +236,7 @@ const App: React.FC = () => {
                 <CheckCircle2 size={48} className="text-emerald-500" />
               </div>
               <h2 className="text-3xl font-black text-slate-800 mb-2 uppercase tracking-tight">Vote Received!</h2>
-              <p className="text-slate-500 mb-8 font-medium">Your selection has been securely recorded for the 2026 IPSA Association Election.</p>
+              <p className="text-slate-500 mb-8 font-medium">Your selection has been securely recorded for the 2026 IPSA Presidential Election.</p>
               <button 
                 onClick={() => setView('voter-portal')}
                 className="w-full bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-red-900/20 active:scale-[0.98]"
@@ -311,10 +311,10 @@ const App: React.FC = () => {
             <div className="h-px bg-slate-200 w-12"></div>
           </div>
           <p className="text-slate-500 text-sm font-medium">
-            &copy; 2026 Hisyam. 
+            &copy; 2026 Hisyam 
             <br className="sm:hidden" />
             <span className="mx-2 hidden sm:inline">•</span>
-            International Program Student Association Executive Board.
+            International Program Student Association Executive Board
           </p>
         </div>
       </footer>
