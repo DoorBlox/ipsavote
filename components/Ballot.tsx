@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Voter, Candidate, UserRole } from '../types';
-import { Check, Info, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle } from 'lucide-react';
 
 interface BallotProps {
   voter: Voter;

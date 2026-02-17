@@ -1,10 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
 import { Voter, UserRole } from '../types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from '../constants';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-// Added CheckCircle2 and AlertTriangle to the imports from lucide-react
-import { Users, Ticket, BarChart3, Upload, Download, Trash2, UserPlus, Printer, Search, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface AdminDashboardProps {
   voters: Voter[];

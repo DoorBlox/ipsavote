@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { UserRole, Voter, ViewState } from './types';
+import { Voter, ViewState } from './types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from './constants';
 import VoterPortal from './components/VoterPortal';
 import Ballot from './components/Ballot';
