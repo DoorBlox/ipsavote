@@ -1,18 +1,20 @@
+
 import React, { useState, useMemo } from 'react';
 import { Voter, UserRole } from '../types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from '../constants';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface AdminDashboardProps {
   voters: Voter[];
-  setVoters: React.Dispatch<React.SetStateAction<Voter[]>>;
+  setVoters: (newVoters: Voter[]) => Promise<void>;
   onOpenQRSheet: () => void;
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOpenQRSheet }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'stats' | 'voters' | 'manage'>('stats');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const maleElectionData = useMemo(() => {
     return MALE_CANDIDATES.map(c => ({
@@ -39,20 +41,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
     return result;
   };
 
-  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setIsSyncing(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const text = event.target?.result as string;
       const lines = text.split('\n');
-      const newVoters: Voter[] = [...voters];
+      const newVoters: Voter[] = [];
       
-      // Skip header
       for (let i = 1; i < lines.length; i++) {
         const parts = lines[i].split(',').map(p => p.trim());
-        if (parts.length < 2) continue; // Skip empty lines
+        if (parts.length < 2) continue;
 
         const [no, name, roleStr] = parts;
         const role = roleStr?.toLowerCase() as UserRole;
@@ -69,7 +71,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
           });
         }
       }
-      setVoters(newVoters);
+      
+      try {
+        await setVoters([...voters, ...newVoters]);
+      } catch (err) {
+        console.error("Failed to sync new voters:", err);
+      } finally {
+        setIsSyncing(false);
+      }
     };
     reader.readAsText(file);
   };
@@ -90,10 +99,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
     a.click();
   };
 
-  const clearAllData = () => {
-    if (confirm('CRITICAL: Are you sure you want to permanently delete all election data, tokens, and votes?')) {
-      setVoters([]);
-      localStorage.removeItem('ipsa_voters');
+  const clearAllData = async () => {
+    if (confirm('CRITICAL: Are you sure you want to permanently delete all election data across ALL devices?')) {
+      setIsSyncing(true);
+      try {
+        await setVoters([]);
+        localStorage.removeItem('ipsa_voters');
+      } finally {
+        setIsSyncing(false);
+      }
     }
   };
 
@@ -105,9 +119,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-800">Admin Control Center</h2>
-          <p className="text-slate-500">Monitor results and manage voter credentials.</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="text-3xl font-bold text-slate-800">Admin Control Center</h2>
+            <p className="text-slate-500">Monitor results and manage voter credentials.</p>
+          </div>
+          {isSyncing && (
+            <div className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full flex items-center gap-2 text-xs font-bold animate-pulse">
+              <Loader2 size={12} className="animate-spin" />
+              Syncing...
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <button 
@@ -269,7 +291,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
 
       {activeTab === 'manage' && (
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Import/Export */}
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
             <h3 className="text-xl font-bold text-slate-800">Bulk Data Management</h3>
             <div className="space-y-4">
@@ -282,12 +303,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                   onChange={handleCSVUpload}
                   className="hidden" 
                   id="csv-upload"
+                  disabled={isSyncing}
                 />
                 <label 
                   htmlFor="csv-upload"
-                  className="bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-all shadow-sm"
+                  className={`bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-all shadow-sm ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
                 >
-                  Choose File
+                  {isSyncing ? 'Processing...' : 'Choose File'}
                 </label>
               </div>
               
@@ -308,20 +330,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
             </div>
           </div>
 
-          {/* Danger Zone */}
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
             <h3 className="text-xl font-bold text-slate-800">System Controls</h3>
             <div className="space-y-4">
               <button 
                 onClick={clearAllData}
-                className="w-full flex items-center justify-center gap-2 border-2 border-rose-100 text-rose-600 hover:bg-rose-50 px-4 py-4 rounded-2xl font-bold transition-all"
+                disabled={isSyncing}
+                className="w-full flex items-center justify-center gap-2 border-2 border-rose-100 text-rose-600 hover:bg-rose-50 px-4 py-4 rounded-2xl font-bold transition-all disabled:opacity-50"
               >
-                <Trash2 size={20} /> Reset All Election Data
+                <Trash2 size={20} /> {isSyncing ? 'Deleting...' : 'Reset All Election Data'}
               </button>
               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3">
                 <AlertTriangle className="text-amber-500 shrink-0" />
                 <p className="text-xs text-amber-800">
-                  Resetting will wipe all voters, generated tokens, and vote history. This action cannot be undone. Always export a CSV backup before performing a reset.
+                  Resetting will wipe all voters from the CLOUD. This will be reflected on all student devices immediately. Always export a CSV backup before performing a reset.
                 </p>
               </div>
             </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Voter, ViewState } from './types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from './constants';
@@ -5,22 +6,62 @@ import VoterPortal from './components/VoterPortal';
 import Ballot from './components/Ballot';
 import AdminDashboard from './components/AdminDashboard';
 import QRSheet from './components/QRSheet';
-import { CheckCircle2, ShieldCheck, LogOut } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, LogOut, Loader2, Wifi, WifiOff } from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, onSnapshot, doc, updateDoc, writeBatch } from 'firebase/firestore';
+
+// Configuration - Use VITE_ prefix for Vite environment variables
+const firebaseConfig = {
+  apiKey: (import.meta as any).env.VITE_FIREBASE_API_KEY || "",
+  authDomain: (import.meta as any).env.VITE_FIREBASE_AUTH_DOMAIN || "",
+  projectId: (import.meta as any).env.VITE_FIREBASE_PROJECT_ID || "",
+  storageBucket: (import.meta as any).env.VITE_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: (import.meta as any).env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: (import.meta as any).env.VITE_FIREBASE_APP_ID || ""
+};
+
+// Initialize Firebase only if config exists
+const isFirebaseEnabled = !!firebaseConfig.apiKey;
+const app = isFirebaseEnabled ? initializeApp(firebaseConfig) : null;
+const db = app ? getFirestore(app) : null;
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('voter-portal');
   const [voters, setVoters] = useState<Voter[]>([]);
   const [activeVoter, setActiveVoter] = useState<Voter | null>(null);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
+  const [dbConnected, setDbConnected] = useState(isFirebaseEnabled);
+  const [loading, setLoading] = useState(isFirebaseEnabled);
 
-  // Initialize data from localStorage or mock
+  // Sync with Firestore in real-time
   useEffect(() => {
-    const storedVoters = localStorage.getItem('ipsa_voters');
-    if (storedVoters) {
-      setVoters(JSON.parse(storedVoters));
+    if (!db) {
+      // Fallback to localStorage if Firebase isn't configured
+      const stored = localStorage.getItem('ipsa_voters');
+      if (stored) setVoters(JSON.parse(stored));
+      setLoading(false);
+      return;
     }
+
+    const unsub = onSnapshot(collection(db, 'voters'), 
+      (snapshot) => {
+        const voterData: Voter[] = [];
+        snapshot.forEach((doc) => voterData.push({ ...doc.data() } as Voter));
+        setVoters(voterData);
+        setDbConnected(true);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Firestore sync error:", error);
+        setDbConnected(false);
+        setLoading(false);
+      }
+    );
+
+    return () => unsub();
   }, []);
 
+  // Sync to local storage for extra safety/offline support
   useEffect(() => {
     if (voters.length > 0) {
       localStorage.setItem('ipsa_voters', JSON.stringify(voters));
@@ -37,33 +78,40 @@ const App: React.FC = () => {
     return { success: true };
   };
 
-  const handleVoteSubmit = (maleId: string | null, femaleId: string | null) => {
+  const handleVoteSubmit = async (maleId: string | null, femaleId: string | null) => {
     if (!activeVoter) return;
 
-    const updatedVoters = voters.map(v => {
-      if (v.id === activeVoter.id) {
-        return {
-          ...v,
+    try {
+      if (db) {
+        // Update specific document in Firestore
+        const voterRef = doc(db, 'voters', activeVoter.id);
+        await updateDoc(voterRef, {
           used: true,
           maleVote: maleId,
           femaleVote: femaleId
-        };
+        });
+      } else {
+        // Local fallback
+        const updatedVoters = voters.map(v => 
+          v.id === activeVoter.id ? { ...v, used: true, maleVote: maleId, femaleVote: femaleId } : v
+        );
+        setVoters(updatedVoters);
       }
-      return v;
-    });
 
-    setVoters(updatedVoters);
-    setView('success');
-    setActiveVoter(null);
+      setView('success');
+      setActiveVoter(null);
 
-    // Auto return to portal after 5 seconds
-    setTimeout(() => {
-      setView('voter-portal');
-    }, 5000);
+      setTimeout(() => {
+        setView('voter-portal');
+      }, 5000);
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Failed to submit vote. Please check your internet connection.");
+    }
   };
 
   const handleAdminLogin = (key: string) => {
-    const expected = 'admin123'; // Simple demo password
+    const expected = (import.meta as any).env.VITE_ADMIN_PASSPHRASE || 'admin123';
     if (key === expected) {
       setAdminAuthenticated(true);
       setView('admin-dashboard');
@@ -71,6 +119,30 @@ const App: React.FC = () => {
     }
     return false;
   };
+
+  const setVotersInDb = async (newVoters: Voter[]) => {
+    if (db) {
+      const batch = writeBatch(db);
+      // Clear existing (optional, but for new lists it's common)
+      // For this simple version, we'll just add/overwrite
+      newVoters.forEach(v => {
+        const ref = doc(db, 'voters', v.id);
+        batch.set(ref, v);
+      });
+      await batch.commit();
+    } else {
+      setVoters(newVoters);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-indigo-900 flex flex-col items-center justify-center text-white">
+        <Loader2 className="animate-spin mb-4" size={48} />
+        <h2 className="text-xl font-bold">Connecting to IPSA Cloud...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -87,6 +159,13 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex gap-4 items-center">
+          {adminAuthenticated && (
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${dbConnected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+              {dbConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
+              {dbConnected ? 'Cloud Active' : 'Offline Mode'}
+            </div>
+          )}
+          
           {view === 'admin-dashboard' ? (
             <button 
               onClick={() => { setAdminAuthenticated(false); setView('voter-portal'); }}
@@ -109,6 +188,12 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-8 relative">
+        {!dbConnected && view !== 'admin-login' && !adminAuthenticated && (
+          <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500">
+            ⚠️ The system is currently in offline fallback mode. Database synchronization is disabled.
+          </div>
+        )}
+
         {view === 'voter-portal' && (
           <VoterPortal onAuth={handleVoterAuth} />
         )}
@@ -128,7 +213,7 @@ const App: React.FC = () => {
             <div className="bg-white p-10 rounded-2xl shadow-xl border border-indigo-50">
               <CheckCircle2 size={80} className="text-emerald-500 mx-auto mb-6" />
               <h2 className="text-3xl font-bold text-slate-800 mb-2">Vote Submitted!</h2>
-              <p className="text-slate-500 mb-8">Thank you for participating in the 2025 IPSA Student Council Election. Your voice has been heard.</p>
+              <p className="text-slate-500 mb-8">Thank you for participating in the 2025 IPSA Student Council Election. Your voice has been shared across all devices.</p>
               <button 
                 onClick={() => setView('voter-portal')}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-all shadow-md active:scale-[0.98]"
@@ -181,7 +266,7 @@ const App: React.FC = () => {
         {view === 'admin-dashboard' && adminAuthenticated && (
           <AdminDashboard 
             voters={voters} 
-            setVoters={setVoters} 
+            setVoters={setVotersInDb} 
             onOpenQRSheet={() => setView('qr-sheet')}
           />
         )}
@@ -200,7 +285,7 @@ const App: React.FC = () => {
           <p className="text-slate-400 text-sm">
             &copy; 2025 IPSA Student Council Presidential Election Portal. 
             <br className="sm:hidden" />
-            Designed for secure and transparent voting.
+            Designed for secure and transparent global voting.
           </p>
         </div>
       </footer>
