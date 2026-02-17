@@ -42,7 +42,6 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
       }
     };
 
-    // No delay needed for professional feel
     initializeScanner();
 
     return () => {
