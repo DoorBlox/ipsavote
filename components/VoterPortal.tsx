@@ -32,7 +32,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
             handleManualSubmit(decodedText);
           },
           (_errorMessage) => {
-            // Ignored - frequent background polling error messages
+            // Silence noise in background polling
           }
         );
         setIsCameraReady(true);

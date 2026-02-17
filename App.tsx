@@ -5,7 +5,7 @@ import VoterPortal from './components/VoterPortal';
 import Ballot from './components/Ballot';
 import AdminDashboard from './components/AdminDashboard';
 import QRSheet from './components/QRSheet';
-import { CheckCircle2, ShieldCheck, LogOut, Loader2, Wifi, WifiOff } from 'lucide-react';
+import { CheckCircle, ShieldCheck, LogOut, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 // Configuration
@@ -229,7 +229,7 @@ const App: React.FC = () => {
         {view === 'success' && (
           <div className="max-w-md mx-auto mt-20 text-center animate-in fade-in zoom-in duration-500">
             <div className="bg-white p-10 rounded-2xl shadow-2xl border-t-8 border-[#7b2b2a]">
-              <CheckCircle2 size={80} className="text-[#c5a059] mx-auto mb-6" />
+              <CheckCircle size={80} className="text-[#c5a059] mx-auto mb-6" />
               <h2 className="text-3xl font-bold text-slate-800 mb-2">Vote Submitted!</h2>
               <p className="text-slate-500 mb-8">Thank you for participating. Your voice has been recorded in the IPSA secure cloud.</p>
               <button 
