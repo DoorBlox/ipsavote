@@ -1,6 +1,13 @@
 
 import { Candidate } from './types';
 
+/**
+ * BRANDING CONFIGURATION
+ * To change the logo, update the APP_LOGO URL below.
+ * Recommended: Square aspect ratio, PNG or SVG format.
+ */
+export const APP_LOGO = 'https://imgur.com/a/VQTo0x9';
+
 export const MALE_CANDIDATES: Candidate[] = [
   { 
     id: 'm1', 
@@ -29,13 +36,10 @@ export const FEMALE_CANDIDATES: Candidate[] = [
   { 
     id: 'f2', 
     name: 'Aisya Khumaira S.', 
-    viceName: 'Nayl', 
+    viceName: 'Nayla Aulia Maulidina', 
     gender: 'female',
     imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=256&h=256&auto=format&fit=crop'
   },
 ];
-
-// Change this URL to update the logo across the entire site
-export const APP_LOGO = 'https://picsum.photos/seed/ipsa/120/120';
 
 export const ADMIN_KEY = import.meta.env.VITE_ADMIN_PASSPHRASE || 'IPSA2025';

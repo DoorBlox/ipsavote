@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, Keyboard, ArrowRight, Loader2, Info, CameraOff, Scan } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface VoterPortalProps {
   onAuth: (token: string) => { success: boolean; error?: string };
@@ -12,45 +12,43 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
-  const scannerRef = useRef<any>(null);
+  const [isCameraStarting, setIsCameraStarting] = useState(true);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
-    const startScanner = async () => {
+    const initializeScanner = async () => {
       try {
-        // Using lower latency and immediate initialization
-        const scanner = new Html5QrcodeScanner("reader", { 
-          fps: 20, 
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-          rememberLastUsedCamera: true,
-          // Try to show camera immediately
-          showTorchButtonIfSupported: true,
-          showZoomSliderIfSupported: true
-        }, false);
-        
-        scanner.render((decodedText: string) => {
-          setToken(decodedText);
-          handleManualSubmit(decodedText);
-          // Auto-clear after successful scan to prevent multiple triggers
-          scanner.clear().catch(console.error);
-        }, (_errorMessage: string) => {
-          // Continuous scanning... log error to debug if needed
-        });
-        
-        scannerRef.current = scanner;
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCodeRef.current = html5QrCode;
+
+        // Configuration for the scanner
+        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        // Attempt to start with environment (back) camera
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          qrConfig,
+          (decodedText) => {
+            setToken(decodedText);
+            handleManualSubmit(decodedText);
+          },
+          () => {
+            // Success call on every frame where QR is not found (ignored)
+          }
+        );
+        setIsCameraStarting(false);
       } catch (err) {
-        console.error("Scanner init error:", err);
-        setScannerError("Could not access camera. Please check permissions or use manual entry.");
+        console.error("Failed to start scanner automatically:", err);
+        setScannerError("Could not start camera automatically. Please check permissions.");
+        setIsCameraStarting(false);
       }
     };
 
-    // Immediate attempt
-    startScanner();
+    initializeScanner();
 
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-        scannerRef.current = null;
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(e => console.error("Error stopping scanner", e));
       }
     };
   }, []);
@@ -67,6 +65,11 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
       if (!result.success) {
         setError(result.error || 'Invalid token');
         setIsLoading(false);
+      } else {
+        // If successful, stop camera before transition
+        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+          html5QrCodeRef.current.stop();
+        }
       }
     }, 400);
   };
@@ -78,7 +81,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           <Scan size={12} /> Live Election System
         </div>
         <h2 className="text-4xl md:text-5xl font-black text-[#7b2b2a] mb-2 tracking-tighter uppercase">Cast Your Vote</h2>
-        <p className="text-slate-500 text-lg font-medium">Please scan your official QR token to access the ballot.</p>
+        <p className="text-slate-500 text-lg font-medium">Camera is active. Please present your QR token.</p>
       </div>
 
       <div className="grid md:grid-cols-5 gap-8 items-start">
@@ -90,20 +93,27 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
               </div>
               <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">Scanner</h3>
             </div>
-            {isLoading && <Loader2 className="animate-spin text-[#7b2b2a]" size={24} />}
+            {(isLoading || isCameraStarting) && <Loader2 className="animate-spin text-[#7b2b2a]" size={24} />}
           </div>
           
           <div className="relative group">
-            <div id="reader" className="overflow-hidden rounded-3xl bg-slate-900 border-8 border-[#fdfbf7] shadow-inner aspect-square">
+            <div id="reader" className="overflow-hidden rounded-3xl bg-slate-900 border-8 border-[#fdfbf7] shadow-inner aspect-square flex items-center justify-center">
+              {isCameraStarting && !scannerError && (
+                <div className="text-white text-center">
+                   <Loader2 className="animate-spin mx-auto mb-4" size={40} />
+                   <p className="font-bold uppercase tracking-widest text-xs">Initializing Camera...</p>
+                </div>
+              )}
               {scannerError && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-slate-800 p-8 text-center">
                   <CameraOff size={48} className="mb-4 text-amber-500" />
-                  <p className="font-bold text-lg">{scannerError}</p>
+                  <p className="font-bold text-lg mb-2">{scannerError}</p>
+                  <p className="text-sm opacity-70">Try refreshing or entering your token manually below.</p>
                 </div>
               )}
             </div>
             
-            {!scannerError && !isLoading && (
+            {!scannerError && !isLoading && !isCameraStarting && (
               <div className="absolute inset-x-12 top-1/2 -translate-y-1/2 h-1 bg-[#c5a059] shadow-[0_0_20px_rgba(197,160,89,0.8)] animate-pulse pointer-events-none rounded-full" />
             )}
           </div>
