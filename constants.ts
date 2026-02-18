@@ -29,13 +29,13 @@ export const FEMALE_CANDIDATES: Candidate[] = [
   { 
     id: 'f2', 
     name: 'Aisya Khumaira S.', 
-    viceName: 'Nayl', 
+    viceName: 'Nayla Aulia Maulidina', 
     gender: 'female',
     imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=256&h=256&auto=format&fit=crop'
   },
 ];
 
 // Change this URL to update the logo across the entire site
-export const APP_LOGO = 'https://imgur.com/a/VQTo0x9';
+export const APP_LOGO = 'https://i.imgur.com/GkbAyLU.png';
 
 export const ADMIN_KEY = import.meta.env.VITE_ADMIN_PASSPHRASE || 'IPSA2025';

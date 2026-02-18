@@ -54,7 +54,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
             <p className="font-bold mb-1 uppercase tracking-tight">Printing Tips for PDF:</p>
             <ul className="list-disc list-inside space-y-0.5 opacity-80">
               <li>Set <strong>Margins</strong> to "None" in the print dialog.</li>
-              <li>Enable <strong>Background Graphics</strong> to see the role badges and logo.</li>
+              <li>Enable <strong>Background Graphics</strong> to see colors and logos.</li>
               <li>Ensure <strong>Paper Size</strong> is set to A4.</li>
             </ul>
           </div>
@@ -77,12 +77,12 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
                 </div>
               </div>
 
-              {/* Center: QR Code */}
+              {/* Center: QR Code - Made significantly larger */}
               <div className="qr-section">
                 <div className="qr-wrapper">
                   <QRCodeCanvas 
                     value={voter.token} 
-                    size={110}
+                    size={135} // Increased from 110
                     level="H"
                     includeMargin={false}
                   />
@@ -92,17 +92,16 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
               {/* Footer: Name & Token */}
               <div className="card-footer">
                 <div className="voter-name-container">
-                  <span className="label">VOTER NAME</span>
                   <h4 className="voter-name">{voter.name || 'UNREGISTERED'}</h4>
                 </div>
                 <div className="token-display">
-                  <span className="token-label">TOKEN ID</span>
+                  <span className="token-label">TOKEN</span>
                   <span className="token-value">{voter.token}</span>
                 </div>
               </div>
               
               {/* Security Watermark */}
-              <div className="security-mark">OFFICIAL BALLOT • IPSA 2026</div>
+              <div className="security-mark">OFFICIAL BALLOT</div>
             </div>
           ))}
           
@@ -129,7 +128,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         .a4-page-container {
           width: 210mm;
           min-height: 297mm;
-          padding: 10mm;
+          padding: 8mm; /* Slightly smaller page padding to fit cards better */
           box-sizing: border-box;
           background: white;
         }
@@ -138,17 +137,17 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 0;
-          border-top: 1px dashed #e2e8f0;
-          border-left: 1px dashed #e2e8f0;
+          border-top: 0.5pt dashed #cbd5e1;
+          border-left: 0.5pt dashed #cbd5e1;
         }
 
         .ballot-card {
-          width: 63.3mm;
-          height: 55mm;
-          padding: 5mm;
+          width: 64.6mm; /* Adjusted to fit 3 columns exactly in A4 minus padding */
+          height: 57mm; /* Adjusted height for 5 rows per page */
+          padding: 4mm;
           box-sizing: border-box;
-          border-right: 1px dashed #e2e8f0;
-          border-bottom: 1px dashed #e2e8f0;
+          border-right: 0.5pt dashed #cbd5e1;
+          border-bottom: 0.5pt dashed #cbd5e1;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
@@ -162,7 +161,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 2mm;
+          margin-bottom: 1.5mm;
         }
 
         .logo-section {
@@ -172,59 +171,54 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         }
 
         .mini-logo {
-          width: 5mm;
-          height: 5mm;
+          width: 6mm;
+          height: 6mm;
           object-fit: contain;
         }
 
         .org-name {
-          font-size: 7pt;
+          font-size: 8pt;
           font-weight: 900;
           color: var(--ipsa-red);
-          letter-spacing: 0.5pt;
+          letter-spacing: 0.3pt;
         }
 
         .role-badge {
-          font-size: 6pt;
+          font-size: 6.5pt;
           font-weight: 900;
           text-transform: uppercase;
-          padding: 0.5mm 2mm;
-          border-radius: 1mm;
-          border: 0.5pt solid transparent;
+          padding: 0.5mm 1.5mm;
+          border-radius: 0.8mm;
         }
 
-        .role-badge.male { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
-        .role-badge.female { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
-        .role-badge.teacher { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .role-badge.male { background: #eff6ff; color: #1e40af; }
+        .role-badge.female { background: #fff1f2; color: #9f1239; }
+        .role-badge.teacher { background: #fef3c7; color: #92400e; }
 
         .qr-section {
           display: flex;
           justify-content: center;
           align-items: center;
           flex-grow: 1;
+          padding: 1mm 0;
         }
 
         .qr-wrapper {
-          padding: 1mm;
+          padding: 1.5mm;
           background: white;
-          border: 0.5pt solid #f1f5f9;
-          border-radius: 1.5mm;
+          border: 1px solid #f1f5f9;
+          border-radius: 1mm;
+          line-height: 0;
         }
 
         .card-footer {
-          margin-top: 2mm;
+          margin-top: 1.5mm;
         }
 
         .voter-name-container {
           margin-bottom: 1mm;
-        }
-
-        .label {
-          display: block;
-          font-size: 5pt;
-          font-weight: 700;
-          color: #94a3b8;
-          margin-bottom: 0.5mm;
+          border-bottom: 0.5pt solid #f1f5f9;
+          padding-bottom: 0.5mm;
         }
 
         .voter-name {
@@ -236,12 +230,13 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
           text-overflow: ellipsis;
           line-height: 1.1;
           text-transform: uppercase;
+          text-align: center;
         }
 
         .token-display {
           background: #f8fafc;
-          padding: 1.5mm;
-          border-radius: 1mm;
+          padding: 1mm 2mm;
+          border-radius: 0.8mm;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -249,26 +244,28 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         }
 
         .token-label {
-          font-size: 5pt;
+          font-size: 6pt;
           font-weight: 900;
-          color: #64748b;
+          color: #94a3b8;
         }
 
         .token-value {
-          font-family: monospace;
-          font-size: 9pt;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 10pt;
           font-weight: 900;
           color: var(--ipsa-red);
-          letter-spacing: 1pt;
+          letter-spacing: 0.5pt;
         }
 
         .security-mark {
           position: absolute;
-          bottom: 1mm;
+          bottom: 0.5mm;
           right: 2mm;
           font-size: 4pt;
           font-weight: 700;
-          color: #cbd5e1;
+          color: #e2e8f0;
+          text-transform: uppercase;
+          letter-spacing: 0.5pt;
           pointer-events: none;
         }
 
@@ -285,17 +282,17 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
 
           .a4-page-container {
             width: 210mm !important;
-            padding: 10mm !important;
+            padding: 8mm !important;
             box-shadow: none !important;
             margin: 0 !important;
           }
 
           .ballot-card {
-            border-color: #000 !important; /* Darker lines for printing */
+            border-color: #cbd5e1 !important;
           }
           
           .token-display {
-            background-color: #f1f5f9 !important;
+            background-color: #f8fafc !important;
             -webkit-print-color-adjust: exact;
           }
 
