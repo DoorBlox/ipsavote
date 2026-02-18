@@ -51,11 +51,11 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
             <FileText size={20} />
           </div>
           <div className="text-sm text-amber-800">
-            <p className="font-bold mb-1 uppercase tracking-tight">Printing Tips for PDF:</p>
-            <ul className="list-disc list-inside space-y-0.5 opacity-80">
-              <li>Set <strong>Margins</strong> to "None" in the print dialog.</li>
-              <li>Enable <strong>Background Graphics</strong> to see colors and logos.</li>
-              <li>Ensure <strong>Paper Size</strong> is set to A4.</li>
+            <p className="font-bold mb-1 uppercase tracking-tight text-[10px]">Optimal PDF Settings:</p>
+            <ul className="list-disc list-inside space-y-0.5 opacity-80 text-[10px]">
+              <li>Set <strong>Margins</strong> to "None".</li>
+              <li>Enable <strong>Background Graphics</strong>.</li>
+              <li>Paper Size: <strong>A4</strong>.</li>
             </ul>
           </div>
         </div>
@@ -77,31 +77,30 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
                 </div>
               </div>
 
-              {/* Center: QR Code - Made significantly larger */}
+              {/* Center: QR Code */}
               <div className="qr-section">
                 <div className="qr-wrapper">
                   <QRCodeCanvas 
                     value={voter.token} 
-                    size={135} // Increased from 110
+                    size={130} 
                     level="H"
                     includeMargin={false}
                   />
                 </div>
               </div>
 
-              {/* Footer: Name & Token */}
+              {/* Footer: Name & Token - Height increased to prevent cutoff */}
               <div className="card-footer">
                 <div className="voter-name-container">
                   <h4 className="voter-name">{voter.name || 'UNREGISTERED'}</h4>
                 </div>
                 <div className="token-display">
-                  <span className="token-label">TOKEN</span>
+                  <span className="token-label">TOKEN ID</span>
                   <span className="token-value">{voter.token}</span>
                 </div>
               </div>
               
-              {/* Security Watermark */}
-              <div className="security-mark">OFFICIAL BALLOT</div>
+              <div className="security-mark">OFFICIAL BALLOT • 2026</div>
             </div>
           ))}
           
@@ -128,7 +127,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         .a4-page-container {
           width: 210mm;
           min-height: 297mm;
-          padding: 8mm; /* Slightly smaller page padding to fit cards better */
+          padding: 10mm;
           box-sizing: border-box;
           background: white;
         }
@@ -142,9 +141,9 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         }
 
         .ballot-card {
-          width: 64.6mm; /* Adjusted to fit 3 columns exactly in A4 minus padding */
-          height: 57mm; /* Adjusted height for 5 rows per page */
-          padding: 4mm;
+          width: 63.3mm;
+          height: 68mm; /* INCREASED HEIGHT: fits 4 rows per page perfectly */
+          padding: 4.5mm;
           box-sizing: border-box;
           border-right: 0.5pt dashed #cbd5e1;
           border-bottom: 0.5pt dashed #cbd5e1;
@@ -161,7 +160,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 1.5mm;
+          height: 8mm;
         }
 
         .logo-section {
@@ -180,15 +179,16 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
           font-size: 8pt;
           font-weight: 900;
           color: var(--ipsa-red);
-          letter-spacing: 0.3pt;
+          letter-spacing: 0.2pt;
         }
 
         .role-badge {
-          font-size: 6.5pt;
+          font-size: 6pt;
           font-weight: 900;
           text-transform: uppercase;
-          padding: 0.5mm 1.5mm;
+          padding: 0.8mm 1.8mm;
           border-radius: 0.8mm;
+          line-height: 1;
         }
 
         .role-badge.male { background: #eff6ff; color: #1e40af; }
@@ -200,30 +200,31 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
           justify-content: center;
           align-items: center;
           flex-grow: 1;
-          padding: 1mm 0;
         }
 
         .qr-wrapper {
           padding: 1.5mm;
           background: white;
-          border: 1px solid #f1f5f9;
+          border: 0.5pt solid #f1f5f9;
           border-radius: 1mm;
           line-height: 0;
         }
 
         .card-footer {
-          margin-top: 1.5mm;
+          margin-top: 2mm;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5mm;
         }
 
         .voter-name-container {
-          margin-bottom: 1mm;
           border-bottom: 0.5pt solid #f1f5f9;
-          padding-bottom: 0.5mm;
+          padding-bottom: 0.8mm;
         }
 
         .voter-name {
-          font-size: 8.5pt;
-          font-weight: 800;
+          font-size: 9pt;
+          font-weight: 900;
           color: black;
           white-space: nowrap;
           overflow: hidden;
@@ -235,8 +236,8 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
 
         .token-display {
           background: #f8fafc;
-          padding: 1mm 2mm;
-          border-radius: 0.8mm;
+          padding: 1.2mm 2.5mm;
+          border-radius: 1mm;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -244,9 +245,10 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         }
 
         .token-label {
-          font-size: 6pt;
+          font-size: 5.5pt;
           font-weight: 900;
           color: #94a3b8;
+          letter-spacing: 0.5pt;
         }
 
         .token-value {
@@ -254,19 +256,22 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
           font-size: 10pt;
           font-weight: 900;
           color: var(--ipsa-red);
-          letter-spacing: 0.5pt;
+          letter-spacing: 0.8pt;
         }
 
         .security-mark {
           position: absolute;
-          bottom: 0.5mm;
-          right: 2mm;
+          bottom: 0.8mm;
+          left: 0;
+          right: 0;
+          text-align: center;
           font-size: 4pt;
           font-weight: 700;
-          color: #e2e8f0;
+          color: #cbd5e1;
           text-transform: uppercase;
-          letter-spacing: 0.5pt;
+          letter-spacing: 1pt;
           pointer-events: none;
+          opacity: 0.5;
         }
 
         @media print {
@@ -282,13 +287,14 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
 
           .a4-page-container {
             width: 210mm !important;
-            padding: 8mm !important;
+            padding: 10mm !important;
             box-shadow: none !important;
             margin: 0 !important;
           }
 
           .ballot-card {
             border-color: #cbd5e1 !important;
+            -webkit-print-color-adjust: exact;
           }
           
           .token-display {
