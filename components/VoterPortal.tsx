@@ -23,6 +23,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
         
         const config = { fps: 20, qrbox: { width: 250, height: 250 } };
         
+        // Use standard environment (back) camera
         await html5QrCode.start(
           { facingMode: "environment" }, 
           config, 
@@ -30,7 +31,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
             setToken(decodedText);
             handleManualSubmit(decodedText);
           },
-          () => {} // silent on frame failure
+          () => {} // silent on frame scan failure
         );
         setIsCameraStarting(false);
       } catch (err) {
@@ -61,7 +62,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
         setError(result.error || 'Invalid token');
         setIsLoading(false);
       } else {
-        // Stop camera if navigation happens
+        // Stop camera if successful login
         if (scannerRef.current && scannerRef.current.isScanning) {
           scannerRef.current.stop().catch(console.error);
         }
@@ -103,7 +104,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-slate-800 p-8 text-center">
                   <CameraOff size={48} className="mb-4 text-amber-500" />
                   <p className="font-bold text-lg mb-2">{scannerError}</p>
-                  <p className="text-xs opacity-60">Try allowing camera permissions in your browser settings or refresh the page.</p>
+                  <p className="text-xs opacity-60">Try allowing camera permissions in your browser or refresh the page.</p>
                 </div>
               )}
             </div>
@@ -114,7 +115,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           </div>
           
           <p className="mt-6 text-center text-xs text-slate-400 font-black uppercase tracking-[0.2em]">
-            Present QR to the frame to begin
+            Align QR Code within the frame to authenticate
           </p>
         </div>
 
@@ -162,7 +163,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
               </div>
               <div className="text-[11px] leading-relaxed">
                 <p className="font-black uppercase tracking-widest mb-1 text-amber-200">Security & Privacy</p>
-                Each token is single-use and non-reversible. Your identity remains decoupled from your vote.
+                Each token is single-use and non-reversible. Your identity remains strictly decoupled from the specific candidate you select.
               </div>
             </div>
           </div>

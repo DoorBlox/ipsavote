@@ -1,12 +1,9 @@
 
 import { Candidate } from './types';
 
-/**
- * BRANDING CONFIGURATION
- * To change the logo, update the APP_LOGO URL below.
- * Note: Use a direct link to an image file (PNG, JPG, or SVG).
- */
-export const APP_LOGO = 'https://i.imgur.com/8pS6mS7.png'; 
+// BRANDING CONFIGURATION
+// Update this URL to change the logo across the entire application.
+export const APP_LOGO = 'https://imgur.com/a/VQTo0x9';
 
 export const MALE_CANDIDATES: Candidate[] = [
   { 
@@ -36,7 +33,7 @@ export const FEMALE_CANDIDATES: Candidate[] = [
   { 
     id: 'f2', 
     name: 'Aisya Khumaira S.', 
-    viceName: 'Nayla Aulia Maulidina', 
+    viceName: 'Nayl', 
     gender: 'female',
     imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=256&h=256&auto=format&fit=crop'
   },

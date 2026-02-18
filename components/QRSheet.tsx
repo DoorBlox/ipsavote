@@ -23,7 +23,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
             <ArrowLeft size={24} />
           </button>
           <div>
-            <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Credential Generation</h2>
+            <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Token Management</h2>
             <p className="text-slate-400 text-xs font-black uppercase tracking-widest">A4 Layout Optimized for Printing</p>
           </div>
         </div>
@@ -43,7 +43,6 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         </button>
       </div>
 
-      {/* Web View Container */}
       <div className="a4-container-wrapper flex justify-center bg-slate-100 py-8 no-print min-h-screen">
          <div className="a4-container bg-white shadow-2xl overflow-hidden">
           <div className="grid grid-cols-3 gap-0 border-t border-l border-slate-200">
@@ -71,7 +70,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
                 <div className="mb-4 bg-white p-2 border-2 border-slate-50 rounded-2xl shadow-sm">
                   <QRCodeCanvas 
                     value={voter.token} 
-                    size={100}
+                    size={90}
                     level="H"
                     includeMargin={false}
                     fgColor="#000000"
@@ -88,11 +87,17 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
                 </div>
               </div>
             ))}
+            
+            {voters.length === 0 && (
+              <div className="col-span-3 py-40 text-center text-slate-300 font-black uppercase tracking-[0.4em] italic text-sm">
+                Registry is empty
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Actual Print Media Layout */}
+      {/* Actual Print Media Layout - High Visibility */}
       <div className="hidden print:block bg-white w-full">
         <div className="a4-print-layout mx-auto">
           <div className="grid grid-cols-3 gap-0 border-t border-l border-black">
@@ -101,12 +106,12 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
                 key={voter.id} 
                 className="token-card-print border-r border-b border-black border-dashed p-6 flex flex-col items-center justify-between text-center relative"
               >
-                <div className="w-full flex justify-between items-center mb-3">
+                <div className="w-full flex justify-between items-center mb-4">
                   <div className="flex items-center gap-1.5">
-                    <img src={APP_LOGO} alt="L" className="w-5 h-5 rounded-sm object-contain" />
+                    <img src={APP_LOGO} alt="L" className="w-6 h-6 rounded-sm object-contain" />
                     <span className="text-[10px] font-bold text-black tracking-[0.1em] uppercase">IPSA 2026</span>
                   </div>
-                  <div className="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest border border-black">
+                  <div className="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest border border-black text-black">
                     {voter.role}
                   </div>
                 </div>
