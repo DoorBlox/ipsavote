@@ -3,7 +3,7 @@ import React from 'react';
 import { Voter } from '../types';
 import { APP_LOGO } from '../constants';
 import { QRCodeCanvas } from 'qrcode.react';
-import { ArrowLeft, ShieldCheck, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, FileText, Download } from 'lucide-react';
 
 interface QRSheetProps {
   voters: Voter[];
@@ -11,183 +11,296 @@ interface QRSheetProps {
 }
 
 const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
-      <div className="flex items-center justify-between no-print bg-white p-8 rounded-[2rem] border border-slate-100 shadow-xl">
-        <div className="flex gap-6 items-center">
-           <button 
-            onClick={onBack}
-            className="p-4 bg-[#fdfbf7] border-2 border-slate-50 rounded-2xl text-[#7b2b2a] hover:bg-white hover:border-[#7b2b2a] transition-all shadow-sm"
-            title="Return"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <div>
-            <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Token Management</h2>
-            <p className="text-slate-400 text-xs font-black uppercase tracking-widest">Generate high-fidelity ballot credentials</p>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* UI Header - Hidden on Print */}
+      <div className="no-print bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={onBack}
+              className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+            >
+              <ArrowLeft size={24} />
+            </button>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Ballot Credentials</h2>
+              <p className="text-sm text-slate-500">{voters.length} individual tokens ready</p>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-4">
-          <button 
-            onClick={() => window.print()}
-            className="flex items-center gap-3 px-10 py-4 bg-[#7b2b2a] text-white rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-[#5a1f1e] shadow-2xl shadow-red-900/20 transition-all scale-105 text-sm"
-          >
-            <Printer size={20} /> Print Credentials
-          </button>
-        </div>
-      </div>
-
-      <div className="a4-container-wrapper flex justify-center bg-slate-100 py-8 no-print">
-         <div className="a4-container bg-white shadow-2xl overflow-hidden">
-          <div className="grid grid-cols-3 gap-0 border-t-2 border-l-2 border-slate-100">
-            {voters.map((voter) => (
-              <div 
-                key={voter.id} 
-                className="token-card border-r-2 border-b-2 border-slate-200 border-dashed p-6 flex flex-col items-center justify-between text-center relative overflow-hidden"
-              >
-                <div className="absolute -bottom-2 -right-2 opacity-[0.04] rotate-[-15deg] text-[#7b2b2a]">
-                  <ShieldCheck size={64} />
-                </div>
-
-                <div className="w-full flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <img src={APP_LOGO} alt="L" className="w-5 h-5 rounded-sm object-contain" />
-                    <span className="text-[8px] font-black text-[#7b2b2a] tracking-[0.1em] uppercase">IPSA 2026</span>
-                  </div>
-                  <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest border-2
-                      ${voter.role === 'male' ? 'border-blue-100 text-blue-700 bg-blue-50' : 
-                        voter.role === 'female' ? 'border-rose-100 text-rose-700 bg-rose-50' : 'border-[#c5a059]/30 text-[#7b2b2a] bg-amber-50'}`}>
-                      {voter.role}
-                    </div>
-                </div>
-
-                <div className="mb-4 bg-white p-2 border-2 border-slate-50 rounded-2xl shadow-sm">
-                  <QRCodeCanvas 
-                    value={voter.token} 
-                    size={90}
-                    level="H"
-                    includeMargin={false}
-                    fgColor="#000000"
-                  />
-                </div>
-
-                <div className="w-full">
-                  <h4 className="font-bold text-black text-[11px] uppercase leading-tight mb-2 tracking-tight">
-                    {voter.name || 'Unknown Voter'}
-                  </h4>
-                  <div className="w-full bg-[#7b2b2a] text-white py-1.5 rounded-lg font-mono text-[13px] font-black tracking-[0.2em] shadow-md">
-                    {voter.token}
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {voters.length === 0 && (
-              <div className="col-span-3 py-40 text-center text-slate-300 font-black uppercase tracking-[0.4em] italic text-sm">
-                Registry is empty
-              </div>
-            )}
+          <div className="flex gap-3">
+            <button 
+              onClick={handlePrint}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#7b2b2a] text-white rounded-xl font-bold hover:bg-[#5a1f1e] transition-all shadow-lg shadow-red-900/20"
+            >
+              <Printer size={18} />
+              Print / Save as PDF
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Print-only View (Hidden on web) */}
-      <div className="hidden print:block bg-white">
-        <div className="a4-container mx-auto">
-          <div className="grid grid-cols-3 gap-0 border-t-2 border-l-2 border-slate-100">
-            {voters.map((voter) => (
-              <div 
-                key={voter.id} 
-                className="token-card border-r-2 border-b-2 border-slate-200 border-dashed p-6 flex flex-col items-center justify-between text-center relative overflow-hidden"
-              >
-                <div className="w-full flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <img src={APP_LOGO} alt="L" className="w-5 h-5 rounded-sm object-contain" />
-                    <span className="text-[8px] font-black text-black tracking-[0.1em] uppercase">IPSA 2026</span>
-                  </div>
-                  <div className="px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest border border-black">
-                    {voter.role}
-                  </div>
-                </div>
+      {/* Print Instructions - Hidden on Print */}
+      <div className="no-print max-w-[210mm] mx-auto mt-6 mb-6">
+        <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex gap-3 items-start">
+          <div className="bg-amber-200 p-1.5 rounded-lg text-amber-700">
+            <FileText size={20} />
+          </div>
+          <div className="text-sm text-amber-800">
+            <p className="font-bold mb-1 uppercase tracking-tight">Printing Tips for PDF:</p>
+            <ul className="list-disc list-inside space-y-0.5 opacity-80">
+              <li>Set <strong>Margins</strong> to "None" in the print dialog.</li>
+              <li>Enable <strong>Background Graphics</strong> to see the role badges and logo.</li>
+              <li>Ensure <strong>Paper Size</strong> is set to A4.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
-                <div className="mb-4 bg-white p-2 border border-black rounded-lg">
-                  <QRCodeCanvas 
-                    value={voter.token} 
-                    size={90}
-                    level="H"
-                    includeMargin={false}
-                    fgColor="#000000"
-                  />
+      {/* Unified A4 Container */}
+      <div className="a4-page-container mx-auto bg-white shadow-2xl print:shadow-none print:m-0">
+        <div className="token-grid">
+          {voters.map((voter) => (
+            <div key={voter.id} className="ballot-card">
+              {/* Header: Logo & Role */}
+              <div className="card-header">
+                <div className="logo-section">
+                  <img src={APP_LOGO} alt="IPSA" className="mini-logo" />
+                  <span className="org-name">IPSA 2026</span>
                 </div>
-
-                <div className="w-full">
-                  <h4 className="font-bold text-black text-[11px] uppercase leading-tight mb-2 tracking-tight">
-                    {voter.name}
-                  </h4>
-                  <div className="w-full bg-black text-white py-1.5 rounded-lg font-mono text-[13px] font-bold tracking-[0.2em]">
-                    {voter.token}
-                  </div>
+                <div className={`role-badge ${voter.role}`}>
+                  {voter.role}
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Center: QR Code */}
+              <div className="qr-section">
+                <div className="qr-wrapper">
+                  <QRCodeCanvas 
+                    value={voter.token} 
+                    size={110}
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+              </div>
+
+              {/* Footer: Name & Token */}
+              <div className="card-footer">
+                <div className="voter-name-container">
+                  <span className="label">VOTER NAME</span>
+                  <h4 className="voter-name">{voter.name || 'UNREGISTERED'}</h4>
+                </div>
+                <div className="token-display">
+                  <span className="token-label">TOKEN ID</span>
+                  <span className="token-value">{voter.token}</span>
+                </div>
+              </div>
+              
+              {/* Security Watermark */}
+              <div className="security-mark">OFFICIAL BALLOT • IPSA 2026</div>
+            </div>
+          ))}
+          
+          {voters.length === 0 && (
+            <div className="col-span-3 py-40 text-center text-slate-300 font-bold uppercase tracking-[0.3em]">
+              No voter records found
+            </div>
+          )}
         </div>
       </div>
 
       <style>{`
-        .a4-container {
+        /* PDF/Print Calibration */
+        :root {
+          --ipsa-red: #7b2b2a;
+          --ipsa-gold: #c5a059;
+        }
+
+        @page {
+          size: A4 portrait;
+          margin: 0;
+        }
+
+        .a4-page-container {
           width: 210mm;
           min-height: 297mm;
           padding: 10mm;
-          background: white;
           box-sizing: border-box;
+          background: white;
         }
 
-        .token-card {
-          width: 63.3mm; 
-          height: 47mm;
-          page-break-inside: avoid;
+        .token-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 0;
+          border-top: 1px dashed #e2e8f0;
+          border-left: 1px dashed #e2e8f0;
+        }
+
+        .ballot-card {
+          width: 63.3mm;
+          height: 55mm;
+          padding: 5mm;
           box-sizing: border-box;
+          border-right: 1px dashed #e2e8f0;
+          border-bottom: 1px dashed #e2e8f0;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          position: relative;
+          overflow: hidden;
+          page-break-inside: avoid;
+          background: white;
+        }
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2mm;
+        }
+
+        .logo-section {
+          display: flex;
+          align-items: center;
+          gap: 1.5mm;
+        }
+
+        .mini-logo {
+          width: 5mm;
+          height: 5mm;
+          object-fit: contain;
+        }
+
+        .org-name {
+          font-size: 7pt;
+          font-weight: 900;
+          color: var(--ipsa-red);
+          letter-spacing: 0.5pt;
+        }
+
+        .role-badge {
+          font-size: 6pt;
+          font-weight: 900;
+          text-transform: uppercase;
+          padding: 0.5mm 2mm;
+          border-radius: 1mm;
+          border: 0.5pt solid transparent;
+        }
+
+        .role-badge.male { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+        .role-badge.female { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
+        .role-badge.teacher { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+
+        .qr-section {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-grow: 1;
+        }
+
+        .qr-wrapper {
+          padding: 1mm;
+          background: white;
+          border: 0.5pt solid #f1f5f9;
+          border-radius: 1.5mm;
+        }
+
+        .card-footer {
+          margin-top: 2mm;
+        }
+
+        .voter-name-container {
+          margin-bottom: 1mm;
+        }
+
+        .label {
+          display: block;
+          font-size: 5pt;
+          font-weight: 700;
+          color: #94a3b8;
+          margin-bottom: 0.5mm;
+        }
+
+        .voter-name {
+          font-size: 8.5pt;
+          font-weight: 800;
+          color: black;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.1;
+          text-transform: uppercase;
+        }
+
+        .token-display {
+          background: #f8fafc;
+          padding: 1.5mm;
+          border-radius: 1mm;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border: 0.5pt solid #e2e8f0;
+        }
+
+        .token-label {
+          font-size: 5pt;
+          font-weight: 900;
+          color: #64748b;
+        }
+
+        .token-value {
+          font-family: monospace;
+          font-size: 9pt;
+          font-weight: 900;
+          color: var(--ipsa-red);
+          letter-spacing: 1pt;
+        }
+
+        .security-mark {
+          position: absolute;
+          bottom: 1mm;
+          right: 2mm;
+          font-size: 4pt;
+          font-weight: 700;
+          color: #cbd5e1;
+          pointer-events: none;
         }
 
         @media print {
-          @page {
-            size: A4 portrait;
-            margin: 0;
-          }
-          
           body {
+            background: white !important;
             margin: 0 !important;
             padding: 0 !important;
-            background: white !important;
           }
-
-          .no-print, .a4-container-wrapper {
+          
+          .no-print {
             display: none !important;
           }
 
-          .a4-container {
+          .a4-page-container {
             width: 210mm !important;
-            height: 297mm !important;
-            padding: 8mm !important;
-            border: none !important;
+            padding: 10mm !important;
             box-shadow: none !important;
             margin: 0 !important;
-            display: block !important;
           }
 
-          .token-card {
-            border: 0.5pt dashed #000 !important;
+          .ballot-card {
+            border-color: #000 !important; /* Darker lines for printing */
+          }
+          
+          .token-display {
+            background-color: #f1f5f9 !important;
             -webkit-print-color-adjust: exact;
           }
 
-          .bg-black {
-            background-color: #000 !important;
-            color: #fff !important;
-          }
-          
-          .text-black {
-            color: #000 !important;
+          .role-badge {
+            -webkit-print-color-adjust: exact;
           }
         }
       `}</style>
