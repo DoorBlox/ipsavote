@@ -171,13 +171,15 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#fdfbf7] flex flex-col text-slate-800">
       <header className="bg-[#7b2b2a] text-white p-4 shadow-xl border-b-4 border-[#c5a059] flex justify-between items-center no-print">
         <div 
-          className="flex items-center gap-3 cursor-pointer min-w-0" 
+          className="flex items-center gap-3 cursor-pointer min-w-0 flex-1" 
           onClick={() => !adminAuthenticated && setView('voter-portal')}
         >
           <div className="shrink-0 bg-white p-1 rounded-lg border-2 border-[#c5a059] shadow-sm">
             <img src={APP_LOGO} alt="IPSA Logo" className="w-10 h-10 rounded-sm object-contain" />
           </div>
-          <h1 className="text-lg md:text-xl font-extrabold tracking-tight uppercase truncate">International Program Student Association</h1>
+          <h1 className="text-sm sm:text-lg md:text-xl font-extrabold tracking-tight uppercase leading-tight">
+            International Program Student Association
+          </h1>
         </div>
 
         <div className="flex gap-4 items-center shrink-0 ml-4">
