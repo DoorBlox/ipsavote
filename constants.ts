@@ -4,9 +4,9 @@ import { Candidate } from './types';
 /**
  * BRANDING CONFIGURATION
  * To change the logo, update the APP_LOGO URL below.
- * Recommended: Square aspect ratio, PNG or SVG format.
+ * Note: Use a direct link to an image file (PNG, JPG, or SVG).
  */
-export const APP_LOGO = 'https://imgur.com/a/VQTo0x9';
+export const APP_LOGO = 'https://i.imgur.com/8pS6mS7.png'; 
 
 export const MALE_CANDIDATES: Candidate[] = [
   { 

@@ -13,42 +13,38 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const [isCameraStarting, setIsCameraStarting] = useState(true);
-  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
-    const initializeScanner = async () => {
+    const startScanner = async () => {
       try {
         const html5QrCode = new Html5Qrcode("reader");
-        html5QrCodeRef.current = html5QrCode;
-
-        // Configuration for the scanner
-        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-        // Attempt to start with environment (back) camera
+        scannerRef.current = html5QrCode;
+        
+        const config = { fps: 20, qrbox: { width: 250, height: 250 } };
+        
         await html5QrCode.start(
-          { facingMode: "environment" },
-          qrConfig,
+          { facingMode: "environment" }, 
+          config, 
           (decodedText) => {
             setToken(decodedText);
             handleManualSubmit(decodedText);
           },
-          () => {
-            // Success call on every frame where QR is not found (ignored)
-          }
+          () => {} // silent on frame failure
         );
         setIsCameraStarting(false);
       } catch (err) {
-        console.error("Failed to start scanner automatically:", err);
-        setScannerError("Could not start camera automatically. Please check permissions.");
+        console.error("Camera direct start failed:", err);
+        setScannerError("Camera could not be started automatically. Check permissions.");
         setIsCameraStarting(false);
       }
     };
 
-    initializeScanner();
+    startScanner();
 
     return () => {
-      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-        html5QrCodeRef.current.stop().catch(e => console.error("Error stopping scanner", e));
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        scannerRef.current.stop().catch(console.error);
       }
     };
   }, []);
@@ -59,16 +55,15 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
     setIsLoading(true);
     setError(null);
     
-    // Minimal delay for UX feedback
     setTimeout(() => {
       const result = onAuth(inputToken.trim());
       if (!result.success) {
         setError(result.error || 'Invalid token');
         setIsLoading(false);
       } else {
-        // If successful, stop camera before transition
-        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-          html5QrCodeRef.current.stop();
+        // Stop camera if navigation happens
+        if (scannerRef.current && scannerRef.current.isScanning) {
+          scannerRef.current.stop().catch(console.error);
         }
       }
     }, 400);
@@ -81,7 +76,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           <Scan size={12} /> Live Election System
         </div>
         <h2 className="text-4xl md:text-5xl font-black text-[#7b2b2a] mb-2 tracking-tighter uppercase">Cast Your Vote</h2>
-        <p className="text-slate-500 text-lg font-medium">Camera is active. Please present your QR token.</p>
+        <p className="text-slate-500 text-lg font-medium">Please present your official QR token to the camera.</p>
       </div>
 
       <div className="grid md:grid-cols-5 gap-8 items-start">
@@ -91,7 +86,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
               <div className="bg-[#7b2b2a] p-3 rounded-2xl text-[#c5a059] shadow-lg shadow-red-900/20">
                 <QrCode size={24} />
               </div>
-              <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">Scanner</h3>
+              <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">Auto-Scanner</h3>
             </div>
             {(isLoading || isCameraStarting) && <Loader2 className="animate-spin text-[#7b2b2a]" size={24} />}
           </div>
@@ -99,16 +94,16 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           <div className="relative group">
             <div id="reader" className="overflow-hidden rounded-3xl bg-slate-900 border-8 border-[#fdfbf7] shadow-inner aspect-square flex items-center justify-center">
               {isCameraStarting && !scannerError && (
-                <div className="text-white text-center">
-                   <Loader2 className="animate-spin mx-auto mb-4" size={40} />
-                   <p className="font-bold uppercase tracking-widest text-xs">Initializing Camera...</p>
+                <div className="text-white flex flex-col items-center">
+                   <Loader2 className="animate-spin mb-4" size={40} />
+                   <p className="font-black uppercase tracking-widest text-[10px]">Initializing Camera...</p>
                 </div>
               )}
               {scannerError && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-slate-800 p-8 text-center">
                   <CameraOff size={48} className="mb-4 text-amber-500" />
                   <p className="font-bold text-lg mb-2">{scannerError}</p>
-                  <p className="text-sm opacity-70">Try refreshing or entering your token manually below.</p>
+                  <p className="text-xs opacity-60">Try allowing camera permissions in your browser settings or refresh the page.</p>
                 </div>
               )}
             </div>
@@ -119,7 +114,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           </div>
           
           <p className="mt-6 text-center text-xs text-slate-400 font-black uppercase tracking-[0.2em]">
-            Align QR Code within the frame
+            Present QR to the frame to begin
           </p>
         </div>
 
@@ -167,7 +162,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
               </div>
               <div className="text-[11px] leading-relaxed">
                 <p className="font-black uppercase tracking-widest mb-1 text-amber-200">Security & Privacy</p>
-                Each token is single-use and non-reversible. Your identity remains strictly decoupled from the specific candidate you select.
+                Each token is single-use and non-reversible. Your identity remains decoupled from your vote.
               </div>
             </div>
           </div>
