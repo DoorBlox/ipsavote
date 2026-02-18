@@ -314,6 +314,9 @@ const App: React.FC = () => {
             &copy; 2026 Hisyam 
             <br className="sm:hidden" />
             <span className="mx-2 hidden sm:inline">•</span>
+            4EVER
+            <br className="sm:hidden" />
+            <span className="mx-2 hidden sm:inline">•</span>
             International Program Student Association Executive Board
           </p>
         </div>
