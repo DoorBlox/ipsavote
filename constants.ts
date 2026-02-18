@@ -1,10 +1,6 @@
 
 import { Candidate } from './types';
 
-// BRANDING CONFIGURATION
-// Update this URL to change the logo across the entire application.
-export const APP_LOGO = 'https://imgur.com/a/VQTo0x9';
-
 export const MALE_CANDIDATES: Candidate[] = [
   { 
     id: 'm1', 
@@ -38,5 +34,8 @@ export const FEMALE_CANDIDATES: Candidate[] = [
     imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=256&h=256&auto=format&fit=crop'
   },
 ];
+
+// Change this URL to update the logo across the entire site
+export const APP_LOGO = 'https://imgur.com/a/VQTo0x9';
 
 export const ADMIN_KEY = import.meta.env.VITE_ADMIN_PASSPHRASE || 'IPSA2025';

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, Keyboard, ArrowRight, Loader2, Info, CameraOff, Scan } from 'lucide-react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 interface VoterPortalProps {
   onAuth: (token: string) => { success: boolean; error?: string };
@@ -12,40 +12,45 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
-  const [isCameraStarting, setIsCameraStarting] = useState(true);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerRef = useRef<any>(null);
 
   useEffect(() => {
     const startScanner = async () => {
       try {
-        const html5QrCode = new Html5Qrcode("reader");
-        scannerRef.current = html5QrCode;
+        // Using lower latency and immediate initialization
+        const scanner = new Html5QrcodeScanner("reader", { 
+          fps: 20, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          rememberLastUsedCamera: true,
+          // Try to show camera immediately
+          showTorchButtonIfSupported: true,
+          showZoomSliderIfSupported: true
+        }, false);
         
-        const config = { fps: 20, qrbox: { width: 250, height: 250 } };
+        scanner.render((decodedText: string) => {
+          setToken(decodedText);
+          handleManualSubmit(decodedText);
+          // Auto-clear after successful scan to prevent multiple triggers
+          scanner.clear().catch(console.error);
+        }, (_errorMessage: string) => {
+          // Continuous scanning... log error to debug if needed
+        });
         
-        // Use standard environment (back) camera
-        await html5QrCode.start(
-          { facingMode: "environment" }, 
-          config, 
-          (decodedText) => {
-            setToken(decodedText);
-            handleManualSubmit(decodedText);
-          },
-          () => {} // silent on frame scan failure
-        );
-        setIsCameraStarting(false);
+        scannerRef.current = scanner;
       } catch (err) {
-        console.error("Camera direct start failed:", err);
-        setScannerError("Camera could not be started automatically. Check permissions.");
-        setIsCameraStarting(false);
+        console.error("Scanner init error:", err);
+        setScannerError("Could not access camera. Please check permissions or use manual entry.");
       }
     };
 
+    // Immediate attempt
     startScanner();
 
     return () => {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().catch(console.error);
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(console.error);
+        scannerRef.current = null;
       }
     };
   }, []);
@@ -56,16 +61,12 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
     setIsLoading(true);
     setError(null);
     
+    // Minimal delay for UX feedback
     setTimeout(() => {
       const result = onAuth(inputToken.trim());
       if (!result.success) {
         setError(result.error || 'Invalid token');
         setIsLoading(false);
-      } else {
-        // Stop camera if successful login
-        if (scannerRef.current && scannerRef.current.isScanning) {
-          scannerRef.current.stop().catch(console.error);
-        }
       }
     }, 400);
   };
@@ -77,7 +78,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           <Scan size={12} /> Live Election System
         </div>
         <h2 className="text-4xl md:text-5xl font-black text-[#7b2b2a] mb-2 tracking-tighter uppercase">Cast Your Vote</h2>
-        <p className="text-slate-500 text-lg font-medium">Please present your official QR token to the camera.</p>
+        <p className="text-slate-500 text-lg font-medium">Please scan your official QR token to access the ballot.</p>
       </div>
 
       <div className="grid md:grid-cols-5 gap-8 items-start">
@@ -87,35 +88,28 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
               <div className="bg-[#7b2b2a] p-3 rounded-2xl text-[#c5a059] shadow-lg shadow-red-900/20">
                 <QrCode size={24} />
               </div>
-              <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">Auto-Scanner</h3>
+              <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">Scanner</h3>
             </div>
-            {(isLoading || isCameraStarting) && <Loader2 className="animate-spin text-[#7b2b2a]" size={24} />}
+            {isLoading && <Loader2 className="animate-spin text-[#7b2b2a]" size={24} />}
           </div>
           
           <div className="relative group">
-            <div id="reader" className="overflow-hidden rounded-3xl bg-slate-900 border-8 border-[#fdfbf7] shadow-inner aspect-square flex items-center justify-center">
-              {isCameraStarting && !scannerError && (
-                <div className="text-white flex flex-col items-center">
-                   <Loader2 className="animate-spin mb-4" size={40} />
-                   <p className="font-black uppercase tracking-widest text-[10px]">Initializing Camera...</p>
-                </div>
-              )}
+            <div id="reader" className="overflow-hidden rounded-3xl bg-slate-900 border-8 border-[#fdfbf7] shadow-inner aspect-square">
               {scannerError && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-slate-800 p-8 text-center">
                   <CameraOff size={48} className="mb-4 text-amber-500" />
-                  <p className="font-bold text-lg mb-2">{scannerError}</p>
-                  <p className="text-xs opacity-60">Try allowing camera permissions in your browser or refresh the page.</p>
+                  <p className="font-bold text-lg">{scannerError}</p>
                 </div>
               )}
             </div>
             
-            {!scannerError && !isLoading && !isCameraStarting && (
+            {!scannerError && !isLoading && (
               <div className="absolute inset-x-12 top-1/2 -translate-y-1/2 h-1 bg-[#c5a059] shadow-[0_0_20px_rgba(197,160,89,0.8)] animate-pulse pointer-events-none rounded-full" />
             )}
           </div>
           
           <p className="mt-6 text-center text-xs text-slate-400 font-black uppercase tracking-[0.2em]">
-            Align QR Code within the frame to authenticate
+            Align QR Code within the frame
           </p>
         </div>
 
