@@ -82,14 +82,14 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
                 <div className="qr-wrapper">
                   <QRCodeCanvas 
                     value={voter.token} 
-                    size={130} 
+                    size={120} 
                     level="H"
                     includeMargin={false}
                   />
                 </div>
               </div>
 
-              {/* Footer: Name & Token - Height increased to prevent cutoff */}
+              {/* Footer: Name & Token */}
               <div className="card-footer">
                 <div className="voter-name-container">
                   <h4 className="voter-name">{voter.name || 'UNREGISTERED'}</h4>
@@ -127,7 +127,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         .a4-page-container {
           width: 210mm;
           min-height: 297mm;
-          padding: 10mm;
+          padding: 8.5mm;
           box-sizing: border-box;
           background: white;
         }
@@ -141,9 +141,9 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         }
 
         .ballot-card {
-          width: 63.3mm;
-          height: 68mm; /* INCREASED HEIGHT: fits 4 rows per page perfectly */
-          padding: 4.5mm;
+          width: 64.3mm;
+          height: 70mm; /* RE-CALIBRATED: (297mm - 17mm padding) / 4 rows = ~70mm exactly */
+          padding: 5mm;
           box-sizing: border-box;
           border-right: 0.5pt dashed #cbd5e1;
           border-bottom: 0.5pt dashed #cbd5e1;
@@ -200,6 +200,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
           justify-content: center;
           align-items: center;
           flex-grow: 1;
+          padding: 1mm 0;
         }
 
         .qr-wrapper {
@@ -211,7 +212,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
         }
 
         .card-footer {
-          margin-top: 2mm;
+          margin-top: 1mm;
           display: flex;
           flex-direction: column;
           gap: 1.5mm;
@@ -287,7 +288,7 @@ const QRSheet: React.FC<QRSheetProps> = ({ voters, onBack }) => {
 
           .a4-page-container {
             width: 210mm !important;
-            padding: 10mm !important;
+            padding: 8.5mm !important;
             box-shadow: none !important;
             margin: 0 !important;
           }

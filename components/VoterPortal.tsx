@@ -17,13 +17,11 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
   useEffect(() => {
     const startScanner = async () => {
       try {
-        // Using lower latency and immediate initialization
         const scanner = new Html5QrcodeScanner("reader", { 
           fps: 20, 
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
           rememberLastUsedCamera: true,
-          // Try to show camera immediately
           showTorchButtonIfSupported: true,
           showZoomSliderIfSupported: true
         }, false);
@@ -31,10 +29,9 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
         scanner.render((decodedText: string) => {
           setToken(decodedText);
           handleManualSubmit(decodedText);
-          // Auto-clear after successful scan to prevent multiple triggers
           scanner.clear().catch(console.error);
         }, (_errorMessage: string) => {
-          // Continuous scanning... log error to debug if needed
+          // Continuous scanning...
         });
         
         scannerRef.current = scanner;
@@ -44,7 +41,6 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
       }
     };
 
-    // Immediate attempt
     startScanner();
 
     return () => {
@@ -61,7 +57,6 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
     setIsLoading(true);
     setError(null);
     
-    // Minimal delay for UX feedback
     setTimeout(() => {
       const result = onAuth(inputToken.trim());
       if (!result.success) {
@@ -163,6 +158,66 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        /* Scanner UI Overrides */
+        #reader { border: none !important; }
+        #reader__status_span { display: none !important; }
+        #reader__scan_region { background: #0f172a !important; }
+        #reader__dashboard_section_csr button {
+          background-color: #c5a059 !important;
+          color: #7b2b2a !important;
+          border-radius: 12px !important;
+          padding: 12px 24px !important;
+          font-weight: 800 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.1em !important;
+          border: none !important;
+          margin: 10px 0 !important;
+          cursor: pointer !important;
+          transition: all 0.2s !important;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+        }
+        #reader__dashboard_section_csr button:hover {
+          background-color: #d4b47a !important;
+          transform: translateY(-1px) !important;
+          box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+        }
+        #reader__dashboard_section_csr button:active {
+          transform: translateY(0) !important;
+        }
+        #reader__camera_selection {
+          background: white !important;
+          border-radius: 8px !important;
+          padding: 8px !important;
+          font-weight: 600 !important;
+          font-size: 12px !important;
+          border: 1px solid #e2e8f0 !important;
+          margin-bottom: 10px !important;
+        }
+        /* Style the "Request Camera Permission" specifically */
+        #html5-qrcode-button-camera-permission {
+          display: inline-block !important;
+          width: auto !important;
+          margin-top: 20px !important;
+        }
+        /* Style the "Scan an image file" text if visible as a button */
+        #html5-qrcode-anchor-scan-type-change {
+          color: #c5a059 !important;
+          text-decoration: none !important;
+          font-weight: 800 !important;
+          font-size: 10px !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.2em !important;
+          margin-top: 15px !important;
+          display: block !important;
+          opacity: 0.7 !important;
+        }
+        #html5-qrcode-anchor-scan-type-change:hover {
+          opacity: 1 !important;
+        }
+      `}</style>
     </div>
   );
 };
