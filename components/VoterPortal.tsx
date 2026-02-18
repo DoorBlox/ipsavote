@@ -12,6 +12,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   const scannerRef = useRef<any>(null);
 
   useEffect(() => {
@@ -43,7 +44,18 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
 
     startScanner();
 
+    // Check if camera is actually streaming to show the golden line
+    const checkCamera = setInterval(() => {
+      const video = document.querySelector('#reader video') as HTMLVideoElement;
+      if (video && video.readyState >= 2) {
+        setIsCameraActive(true);
+      } else {
+        setIsCameraActive(false);
+      }
+    }, 500);
+
     return () => {
+      clearInterval(checkCamera);
       if (scannerRef.current) {
         scannerRef.current.clear().catch(console.error);
         scannerRef.current = null;
@@ -98,7 +110,7 @@ const VoterPortal: React.FC<VoterPortalProps> = ({ onAuth }) => {
               )}
             </div>
             
-            {!scannerError && !isLoading && (
+            {!scannerError && !isLoading && isCameraActive && (
               <div className="absolute inset-x-12 top-1/2 -translate-y-1/2 h-1 bg-[#c5a059] shadow-[0_0_20px_rgba(197,160,89,0.8)] animate-pulse pointer-events-none rounded-full" />
             )}
           </div>
