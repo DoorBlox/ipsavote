@@ -2,15 +2,18 @@
 import React, { useState } from 'react';
 import { Voter, UserRole } from '../types';
 import { APP_LOGO } from '../constants';
-import { ArrowLeft, Printer, CheckSquare, Square } from 'lucide-react';
+import { ArrowLeft, Printer, CheckSquare, Square, FileText } from 'lucide-react';
 
 interface VoterListSheetProps {
   voters: Voter[];
   onBack: () => void;
 }
 
+type PaperSize = 'A4' | 'F4';
+
 const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
   const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([UserRole.TEACHER, UserRole.MALE, UserRole.FEMALE]);
+  const [paperSize, setPaperSize] = useState<PaperSize>('A4');
 
   const toggleRole = (role: UserRole) => {
     setSelectedRoles(prev => 
@@ -38,11 +41,17 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
       return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
     });
 
+  const getPaperDimensions = () => {
+    return paperSize === 'A4' 
+      ? { width: '210mm', height: '297mm' } 
+      : { width: '215mm', height: '330mm' }; // F4 / Folio dimensions
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 print:bg-white pb-20 print:pb-0">
       {/* UI Controls - Hidden on Print */}
       <div className="no-print bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button 
               onClick={onBack}
@@ -57,6 +66,20 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
+            {/* Paper Size Selector */}
+            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Size:</span>
+              {(['A4', 'F4'] as PaperSize[]).map(size => (
+                <button
+                  key={size}
+                  onClick={() => setPaperSize(size)}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-black transition-all ${paperSize === size ? 'bg-[#7b2b2a] text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'}`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+
             <div className="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Include:</span>
               {[UserRole.TEACHER, UserRole.MALE, UserRole.FEMALE].map(role => (
@@ -90,11 +113,13 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
       </div>
 
       {/* Printable Sheet Container */}
-      <div className="a4-container mx-auto bg-white shadow-2xl print:shadow-none print:m-0 mt-8 print:mt-0">
-        <div className="p-8 print:p-[8mm] min-h-screen flex flex-col">
+      <div 
+        className="paper-container mx-auto bg-white shadow-2xl print:shadow-none print:m-0 mt-8 print:mt-0 transition-all duration-300"
+        style={getPaperDimensions()}
+      >
+        <div className="p-8 print:p-[8mm] min-h-full flex flex-col">
           
           <table className="w-full text-left border-collapse flex-grow">
-            {/* Thead repeats on every page by default in most browsers */}
             <thead className="table-header-group">
               <tr>
                 <td colSpan={4} className="border-none">
@@ -140,7 +165,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
                 </tr>
               ))}
               
-              {/* Signature Row: Positions itself naturally after the list, above the page footer */}
+              {/* Signature Row: Appears only on the last page above the footer */}
               {processedVoters.length > 0 && (
                 <tr className="signature-row">
                   <td colSpan={4} className="pt-20 pb-12">
@@ -159,7 +184,6 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
               )}
             </tbody>
 
-            {/* Tfoot repeats on every page at the bottom */}
             <tfoot className="table-footer-group">
               <tr>
                 <td colSpan={4} className="pt-6 pb-2">
@@ -186,13 +210,11 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
 
       <style>{`
         @page {
-          size: A4 portrait;
+          size: ${paperSize === 'A4' ? 'A4 portrait' : '215mm 330mm'};
           margin: 0;
         }
         
-        .a4-container {
-          width: 210mm;
-          min-height: 297mm;
+        .paper-container {
           box-sizing: border-box;
           background: white;
           display: flex;
@@ -200,7 +222,6 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
         }
         
         @media print {
-          /* Force browser to remove its own backgrounds/shadows */
           html, body {
             background-color: white !important;
             margin: 0 !important;
@@ -209,13 +230,12 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             print-color-adjust: exact;
           }
           
-          /* Hide non-print UI completely */
           .no-print { display: none !important; }
           
-          /* Make container fill the sheet perfectly without shadows or gaps */
-          .a4-container { 
+          .paper-container { 
             width: 100% !important; 
             min-height: 100% !important;
+            height: auto !important;
             box-shadow: none !important; 
             margin: 0 !important;
             background: white !important;
@@ -228,7 +248,6 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             table-layout: fixed;
           }
           
-          /* Key for multi-page headers/footers */
           thead { display: table-header-group; }
           tfoot { display: table-footer-group; }
           tbody { display: table-row-group; }
@@ -237,12 +256,10 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             page-break-inside: avoid; 
           }
           
-          /* Ensure signature row doesn't break poorly */
           .signature-row {
             page-break-inside: avoid;
           }
 
-          /* Force colors to print */
           .bg-slate-50, .bg-blue-50, .bg-rose-50, .bg-amber-50 {
             background-color: white !important;
           }
