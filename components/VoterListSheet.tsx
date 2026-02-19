@@ -47,7 +47,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
     });
 
   return (
-    <div className="min-h-screen bg-slate-50 print:bg-white pb-20 print:pb-0">
+    <div className="min-h-screen bg-slate-50 pb-20">
       {/* UI Header - Hidden on Print */}
       <div className="no-print bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -98,34 +98,34 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
       </div>
 
       {/* Printable Sheet */}
-      <div className="a4-container mx-auto bg-white shadow-2xl print:shadow-none print:m-0 mt-8 print:mt-0 overflow-visible">
-        <div className="p-12 print:p-[15mm] min-h-screen flex flex-col">
+      <div className="a4-container mx-auto bg-white shadow-2xl print:shadow-none print:m-0 mt-8">
+        <div className="p-12 min-h-full flex flex-col">
           
           <table className="w-full text-left border-collapse flex-grow">
             {/* Table Header: Repeats on every page */}
             <thead className="table-header-group">
               <tr>
                 <td colSpan={4}>
-                  <div className="flex items-center justify-between border-b-4 border-[#7b2b2a] pt-4 pb-12 mb-12">
+                  <div className="flex items-center justify-between border-b-4 border-[#7b2b2a] pt-4 pb-10 mb-12">
                     <div className="flex items-center gap-6">
-                      <img src={APP_LOGO} alt="IPSA" className="w-24 h-24 object-contain" />
+                      <img src={APP_LOGO} alt="IPSA" className="w-20 h-20 object-contain" />
                       <div>
-                        <h1 className="text-4xl font-black text-[#7b2b2a] uppercase tracking-tighter leading-none">Voter Registry List</h1>
-                        <p className="text-base font-bold text-slate-500 mt-2 uppercase tracking-[0.25em]">IPSA Council Election • 2026 Session</p>
+                        <h1 className="text-3xl font-black text-[#7b2b2a] uppercase tracking-tighter leading-none">Voter Registry List</h1>
+                        <p className="text-sm font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]">IPSA Council Election • 2026 Session</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Official Election Date</p>
-                      <p className="text-xl font-black text-slate-800 uppercase tracking-tight border-b-2 border-slate-100 pb-1">MARCH 12, 2026</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Official Election Date</p>
+                      <p className="text-lg font-black text-slate-800 uppercase tracking-tight">MARCH 12, 2026</p>
                     </div>
                   </div>
                 </td>
               </tr>
               <tr className="bg-slate-50 border-y border-slate-200">
-                <th className="px-4 py-5 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] w-16 text-center">No.</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Full Registered Name</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Designation</th>
-                <th className="px-6 py-5 text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] text-right">Access Token</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] w-12 text-center">No.</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Full Registered Name</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Designation</th>
+                <th className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] text-right">Access Token</th>
               </tr>
             </thead>
 
@@ -133,18 +133,18 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             <tbody className="table-row-group">
               {processedVoters.map((voter, idx) => (
                 <tr key={voter.id} className="hover:bg-slate-50 transition-colors even:bg-slate-50/30">
-                  <td className="border-b border-slate-100 px-4 py-6 text-xs font-bold text-slate-400 text-center">{idx + 1}</td>
-                  <td className="border-b border-slate-100 px-6 py-6 text-[14px] font-black text-slate-800 uppercase tracking-tight">{voter.name}</td>
-                  <td className="border-b border-slate-100 px-6 py-6">
-                    <span className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider border
-                      ${voter.role === UserRole.MALE ? 'border-blue-200 text-blue-700 bg-blue-50' : 
-                        voter.role === UserRole.FEMALE ? 'border-rose-200 text-rose-700 bg-rose-50' : 
-                        'border-amber-200 text-amber-800 bg-amber-50'}`}>
+                  <td className="border-b border-slate-100 px-4 py-5 text-xs font-bold text-slate-400 text-center">{idx + 1}</td>
+                  <td className="border-b border-slate-100 px-4 py-5 text-[13px] font-black text-slate-800 uppercase tracking-tight">{voter.name}</td>
+                  <td className="border-b border-slate-100 px-4 py-5">
+                    <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider border
+                      ${voter.role === UserRole.MALE ? 'border-blue-200 text-blue-600 bg-blue-50' : 
+                        voter.role === UserRole.FEMALE ? 'border-rose-200 text-rose-600 bg-rose-50' : 
+                        'border-amber-200 text-amber-700 bg-amber-50'}`}>
                       {voter.role}
                     </span>
                   </td>
-                  <td className="border-b border-slate-100 px-6 py-6 text-right">
-                    <span className="font-mono text-[14px] font-black text-[#7b2b2a] tracking-[0.18em] bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">{voter.token}</span>
+                  <td className="border-b border-slate-100 px-4 py-5 text-right">
+                    <span className="font-mono text-[13px] font-black text-[#7b2b2a] tracking-[0.15em] bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">{voter.token}</span>
                   </td>
                 </tr>
               ))}
@@ -153,14 +153,14 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             {/* Table Footer: Branding repeats on every page at the bottom */}
             <tfoot className="table-footer-group">
               <tr>
-                <td colSpan={4} className="pt-16">
-                  <div className="flex justify-between items-end border-t border-slate-200 pt-8 mb-4">
-                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
-                      Generated by IPSA Executive Portal • Confidential Election Document
-                      <div className="mt-2 text-slate-300">&copy; 2026 HISYAM • INTERNATIONAL PROGRAM STUDENT ASSOCIATION</div>
+                <td colSpan={4} className="pt-12">
+                  <div className="flex justify-between items-end border-t border-slate-200 pt-6">
+                    <div className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.15em]">
+                      Generated by IPSA Executive Portal • Confidential Document
+                      <div className="mt-1 text-slate-300">&copy; 2026 HISYAM • INTERNATIONAL PROGRAM STUDENT ASSOCIATION</div>
                     </div>
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] pb-1">
-                      VALIDATION STAMP REQUIRED
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">
+                      PAGE VALIDATED
                     </div>
                   </div>
                 </td>
@@ -174,19 +174,19 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             </div>
           )}
 
-          {/* Signature Block: Always at the very bottom of the final page */}
+          {/* Signature Block: Optimized for bottom of the final page */}
           {processedVoters.length > 0 && (
-            <div className="signature-section mt-auto pt-32 pb-16">
-              <div className="flex justify-between items-start px-8">
+            <div className="signature-section mt-auto pt-24 pb-12">
+              <div className="flex justify-between items-start">
                 <div className="flex flex-col items-center">
-                  <div className="w-80 border-b-2 border-slate-900 mb-6 h-32"></div>
-                  <p className="text-xs font-black text-slate-900 uppercase tracking-[0.25em]">Election Chair Signature</p>
-                  <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">Official Executive Authorization</p>
+                  <div className="w-72 border-b-2 border-slate-800 mb-4 h-28"></div>
+                  <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Election Chair Signature</p>
+                  <p className="text-[9px] text-slate-400 mt-1 uppercase font-bold tracking-widest">Official Certification</p>
                 </div>
                 <div className="flex flex-col items-center">
-                  <div className="w-80 border-b-2 border-slate-900 mb-6 h-32"></div>
-                  <p className="text-xs font-black text-slate-900 uppercase tracking-[0.25em]">Head Supervisor Signature</p>
-                  <p className="text-[10px] text-slate-400 mt-2 uppercase font-bold tracking-widest">External Verification Control</p>
+                  <div className="w-72 border-b-2 border-slate-800 mb-4 h-28"></div>
+                  <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Head Supervisor Signature</p>
+                  <p className="text-[9px] text-slate-400 mt-1 uppercase font-bold tracking-widest">Verification Control</p>
                 </div>
               </div>
             </div>
@@ -197,7 +197,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
       <style>{`
         @page {
           size: A4 portrait;
-          margin: 0;
+          margin: 0mm; /* Managed by container padding */
         }
         .a4-container {
           width: 210mm;
@@ -208,7 +208,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
           flex-direction: column;
         }
         @media print {
-          body, html { 
+          body { 
             background: white !important; 
             margin: 0 !important; 
             padding: 0 !important; 
@@ -217,10 +217,10 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
           .no-print { display: none !important; }
           .a4-container { 
             width: 100% !important; 
-            min-height: 297mm !important;
+            height: auto !important; 
+            min-height: 0 !important;
             box-shadow: none !important; 
-            margin: 0 !important;
-            background: white !important;
+            margin: 0 !important; 
           }
           table { 
             width: 100% !important; 
@@ -235,19 +235,16 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
           .signature-section { 
             page-break-inside: avoid;
             display: block !important;
-            margin-top: auto !important;
-            padding-top: 40mm !important;
+            /* mt-auto pushes to bottom if container is flex-col and has height, 
+               but in print we often need manual padding-top */
+            margin-top: 20mm !important;
           }
 
-          /* Force backgrounds and remove browser styling */
+          /* Ensure designations and tokens keep their background colors */
           .bg-slate-50, .bg-blue-50, .bg-rose-50, .bg-amber-50 {
             background-color: inherit !important;
             -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
           }
-          
-          /* Remove any lingering browser headers/footers */
-          * { -webkit-print-color-adjust: exact; }
         }
       `}</style>
     </div>
