@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Voter, UserRole } from '../types';
 import { APP_LOGO } from '../constants';
-import { ArrowLeft, Printer, CheckSquare, Square, FileText } from 'lucide-react';
+import { ArrowLeft, Printer, CheckSquare, Square } from 'lucide-react';
 
 interface VoterListSheetProps {
   voters: Voter[];
