@@ -28,4 +28,4 @@ export interface ElectionConfig {
   femaleCandidates: Candidate[];
 }
 
-export type ViewState = 'voter-portal' | 'ballot' | 'success' | 'admin-login' | 'admin-dashboard' | 'qr-sheet';
+export type ViewState = 'voter-portal' | 'ballot' | 'success' | 'admin-login' | 'admin-dashboard' | 'qr-sheet' | 'voter-list-sheet';

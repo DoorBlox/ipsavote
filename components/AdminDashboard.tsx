@@ -3,16 +3,17 @@ import React, { useState, useMemo } from 'react';
 import { Voter, UserRole } from '../types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from '../constants';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2, XCircle, FileText, Filter, RotateCcw } from 'lucide-react';
+import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2, XCircle, FileText, Filter, RotateCcw, ClipboardList } from 'lucide-react';
 
 interface AdminDashboardProps {
   voters: Voter[];
   setVoters: (newVoters: Voter[]) => Promise<void>;
   onOpenQRSheet: () => void;
+  onOpenVoterListSheet: () => void;
   onClearAll: () => Promise<void>;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOpenQRSheet, onClearAll }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOpenQRSheet, onOpenVoterListSheet, onClearAll }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -403,7 +404,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                 </label>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button 
                   onClick={exportCSV}
                   className="flex items-center justify-center gap-3 bg-white border-2 border-slate-100 hover:border-[#c5a059] text-slate-700 px-4 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all"
@@ -415,6 +416,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                   className="flex items-center justify-center gap-3 bg-[#c5a059] hover:bg-[#b08d48] text-white px-4 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-amber-900/10"
                 >
                   <Printer size={18} /> Print Tokens
+                </button>
+                <button 
+                  onClick={onOpenVoterListSheet}
+                  className="flex items-center justify-center gap-3 bg-[#7b2b2a] hover:bg-[#5a1f1e] text-white px-4 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-red-900/10 sm:col-span-2"
+                >
+                  <ClipboardList size={18} /> Print Voter List
                 </button>
               </div>
             </div>

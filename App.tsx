@@ -6,6 +6,7 @@ import VoterPortal from './components/VoterPortal';
 import Ballot from './components/Ballot';
 import AdminDashboard from './components/AdminDashboard';
 import QRSheet from './components/QRSheet';
+import VoterListSheet from './components/VoterListSheet';
 import { CheckCircle2, ShieldCheck, LogOut, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -293,12 +294,20 @@ const App: React.FC = () => {
             voters={voters} 
             setVoters={syncVotersToDb} 
             onOpenQRSheet={() => setView('qr-sheet')}
+            onOpenVoterListSheet={() => setView('voter-list-sheet')}
             onClearAll={clearAllData}
           />
         )}
 
         {view === 'qr-sheet' && adminAuthenticated && (
           <QRSheet 
+            voters={voters} 
+            onBack={() => setView('admin-dashboard')}
+          />
+        )}
+
+        {view === 'voter-list-sheet' && adminAuthenticated && (
+          <VoterListSheet 
             voters={voters} 
             onBack={() => setView('admin-dashboard')}
           />
