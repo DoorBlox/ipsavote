@@ -151,8 +151,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
     }));
   };
 
-  // Helper to determine if a name is "numeric" (starts with number)
-  const isNumericName = (name: string) => /^\d/.test(name.trim());
+  // Helper to determine if a name contains any digits (e.g., class names like "AR-RIFA'I 1")
+  const containsNumber = (name: string) => /\d/.test(name);
 
   const filteredVoters = useMemo(() => {
     let result = voters.filter(v => {
@@ -172,12 +172,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
       const key = sortConfig.key;
 
       if (key === 'name') {
-        // Special logic: Numeric names at end of alphabetical list
-        const aIsNum = isNumericName(a.name);
-        const bIsNum = isNumericName(b.name);
+        // Special logic: Names with numbers at the end of the list
+        const aHasNum = containsNumber(a.name);
+        const bHasNum = containsNumber(b.name);
 
-        if (aIsNum && !bIsNum) comparison = 1;
-        else if (!aIsNum && bIsNum) comparison = -1;
+        if (aHasNum && !bHasNum) comparison = 1;
+        else if (!aHasNum && bHasNum) comparison = -1;
         else comparison = a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
       } else if (key === 'role') {
         const order = { [UserRole.TEACHER]: 1, [UserRole.MALE]: 2, [UserRole.FEMALE]: 3 };
@@ -472,7 +472,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                   onClick={onOpenQRSheet}
                   className="flex items-center justify-center gap-3 bg-[#c5a059] hover:bg-[#b08d48] text-white px-4 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-amber-900/10"
                 >
-                  <Printer size={18} /> Print Tokens
+                  <Printer size={18} /> Print QR Codes
                 </button>
                 <button 
                   onClick={onOpenVoterListSheet}
