@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Voter, ViewState } from './types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES, APP_LOGO } from './constants';
@@ -174,7 +173,7 @@ const App: React.FC = () => {
   const isSheetView = view === 'qr-sheet' || view === 'voter-list-sheet';
 
   return (
-    <div className={`min-h-screen flex flex-col text-slate-800 ${isSheetView ? 'bg-white' : 'bg-[#fdfbf7]'}`}>
+    <div className={`min-h-screen flex flex-col text-slate-800 print:bg-white ${isSheetView ? 'bg-slate-200' : 'bg-[#fdfbf7]'}`}>
       <header className={`bg-[#7b2b2a] text-white p-4 shadow-xl border-b-4 border-[#c5a059] flex justify-between items-center no-print ${isSheetView ? 'hidden' : ''}`}>
         <div 
           className="flex items-center gap-3 cursor-pointer min-w-0 flex-1" 
@@ -216,7 +215,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className={`flex-1 relative ${isSheetView ? '' : 'container mx-auto px-4 py-8'}`}>
+      <main className={`flex-1 ${isSheetView ? 'w-full' : 'container mx-auto px-4 py-8'}`}>
         {!dbConnected && view !== 'admin-login' && !adminAuthenticated && !isSheetView && (
           <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-800 p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500 shadow-sm">
             ⚠️ {isSupabaseEnabled ? 'Synchronizing with cloud services...' : 'System running in local offline mode.'}
@@ -305,17 +304,21 @@ const App: React.FC = () => {
         )}
 
         {view === 'qr-sheet' && adminAuthenticated && (
-          <QRSheet 
-            voters={voters} 
-            onBack={() => setView('admin-dashboard')}
-          />
+          <div className="w-full h-full bg-slate-200">
+            <QRSheet 
+              voters={voters} 
+              onBack={() => setView('admin-dashboard')}
+            />
+          </div>
         )}
 
         {view === 'voter-list-sheet' && adminAuthenticated && (
-          <VoterListSheet 
-            voters={voters} 
-            onBack={() => setView('admin-dashboard')}
-          />
+          <div className="w-full h-full bg-slate-200">
+            <VoterListSheet 
+              voters={voters} 
+              onBack={() => setView('admin-dashboard')}
+            />
+          </div>
         )}
       </main>
 

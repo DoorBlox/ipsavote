@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Voter, UserRole } from '../types';
 import { APP_LOGO } from '../constants';
@@ -38,7 +37,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
       const bHasNum = containsNumber(b.name);
       if (aHasNum && !bHasNum) return 1;
       if (!aHasNum && bHasNum) return -1;
-      return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+      return a.name.localeCompare(a.name, undefined, { numeric: true, sensitivity: 'base' });
     });
 
   const getPaperDimensions = () => {
@@ -48,7 +47,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-200 print:bg-white pb-20 print:pb-0 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-300 print:bg-white pb-20 print:pb-0 overflow-x-hidden">
       {/* UI Controls - Hidden on Print */}
       <div className="no-print bg-white border-b border-slate-200 sticky top-0 z-50 shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -114,10 +113,10 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
 
       {/* Printable Sheet Container */}
       <div 
-        className="paper-container mx-auto bg-white shadow-2xl print:shadow-none print:m-0 mt-8 print:mt-0 transition-all duration-300 relative z-10"
+        className="paper-container mx-auto bg-white shadow-xl print:shadow-none print:m-0 mt-8 print:mt-0 transition-all duration-300 relative bg-white"
         style={getPaperDimensions()}
       >
-        <div className="p-8 print:p-[8mm] min-h-full flex flex-col bg-white">
+        <div className="p-8 print:p-[10mm] min-h-full flex flex-col bg-white">
           
           <table className="w-full text-left border-collapse flex-grow bg-white">
             <thead className="table-header-group bg-white">
@@ -171,11 +170,11 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
                   <td colSpan={4} className="pt-20 pb-12 bg-white">
                     <div className="flex justify-around items-start bg-white">
                       <div className="flex flex-col items-center bg-white">
-                        <div className="w-56 border-b border-slate-900 mb-3 h-20 bg-white"></div>
+                        <div className="w-56 border-b-2 border-slate-900 mb-3 h-20 bg-white"></div>
                         <p className="text-[9px] font-black text-slate-900 uppercase">Election Chair</p>
                       </div>
                       <div className="flex flex-col items-center bg-white">
-                        <div className="w-56 border-b border-slate-900 mb-3 h-20 bg-white"></div>
+                        <div className="w-56 border-b-2 border-slate-900 mb-3 h-20 bg-white"></div>
                         <p className="text-[9px] font-black text-slate-900 uppercase">Head Supervisor</p>
                       </div>
                     </div>
@@ -216,21 +215,19 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
         
         .paper-container {
           box-sizing: border-box;
-          background: white !important;
+          background-color: white !important;
           display: flex;
           flex-direction: column;
         }
         
         @media print {
-          /* Aggressive override for ANY background in print */
-          html, body, #root, .min-h-screen, main, .flex-1, .paper-container, table, thead, tbody, tfoot, tr, td, th, div, span {
+          /* Massive override to ensure ALL parent elements are forced to white */
+          html, body, #root, div, section, main, .paper-container, table, tr, td, th {
             background-color: white !important;
-            background: white !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            background-image: none !important;
             box-shadow: none !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           
           .no-print { display: none !important; }
@@ -239,34 +236,28 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             width: 100% !important; 
             min-height: 100% !important;
             height: auto !important;
-            box-shadow: none !important; 
             margin: 0 !important;
-            background: white !important;
             padding: 0 !important;
-            position: static !important;
+            box-shadow: none !important;
+            position: relative !important;
           }
           
           table { 
             width: 100% !important; 
-            border-collapse: collapse; 
-            table-layout: fixed;
+            border-collapse: collapse !important; 
+            table-layout: fixed !important;
           }
           
-          thead { display: table-header-group; }
-          tfoot { display: table-footer-group; }
-          tbody { display: table-row-group; }
+          thead { display: table-header-group !important; }
+          tfoot { display: table-footer-group !important; }
+          tbody { display: table-row-group !important; }
           
           tr { 
-            page-break-inside: avoid; 
+            page-break-inside: avoid !important; 
           }
           
           .signature-row {
-            page-break-inside: avoid;
-          }
-
-          /* Ensure designations and tokens keep their colors if they have them, but base bg is white */
-          .bg-white {
-             background-color: white !important;
+            page-break-inside: avoid !important;
           }
         }
       `}</style>
