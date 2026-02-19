@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Voter, UserRole } from '../types';
 import { APP_LOGO } from '../constants';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, CheckSquare, Square } from 'lucide-react';
 
 interface VoterListSheetProps {
   voters: Voter[];
@@ -10,21 +10,47 @@ interface VoterListSheetProps {
 }
 
 const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
+  const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([UserRole.TEACHER, UserRole.MALE, UserRole.FEMALE]);
+
+  const toggleRole = (role: UserRole) => {
+    setSelectedRoles(prev => 
+      prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
+    );
+  };
+
   const handlePrint = () => {
     window.print();
   };
 
-  // Sort: Teacher -> Male -> Female
-  const sortedVoters = [...voters].sort((a, b) => {
-    const order = { [UserRole.TEACHER]: 1, [UserRole.MALE]: 2, [UserRole.FEMALE]: 3 };
-    return (order[a.role] || 99) - (order[b.role] || 99);
-  });
+  // Helper to determine if a name is "numeric" (starts with number)
+  const isNumericName = (name: string) => /^\d/.test(name.trim());
+
+  const processedVoters = voters
+    .filter(v => selectedRoles.includes(v.role))
+    .sort((a, b) => {
+      const roleOrder = { [UserRole.TEACHER]: 1, [UserRole.MALE]: 2, [UserRole.FEMALE]: 3 };
+      
+      // 1. Role Priority
+      if (roleOrder[a.role] !== roleOrder[b.role]) {
+        return (roleOrder[a.role] || 99) - (roleOrder[b.role] || 99);
+      }
+
+      // 2. Numeric vs Alpha within same role (Alpha first, Numeric at the end)
+      const aIsNum = isNumericName(a.name);
+      const bIsNum = isNumericName(b.name);
+
+      if (aIsNum && !bIsNum) return 1;
+      if (!aIsNum && bIsNum) return -1;
+
+      // 3. Alphabetical within groups
+      return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+    });
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* UI Header - Hidden on Print */}
       <div className="no-print bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button 
               onClick={onBack}
@@ -33,17 +59,41 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
               <ArrowLeft size={24} />
             </button>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Voter Registry</h2>
-              <p className="text-sm text-slate-500">{voters.length} registered voters sorted by designation</p>
+              <h2 className="text-xl font-bold text-slate-900">Printable Registry</h2>
+              <p className="text-sm text-slate-500">{processedVoters.length} voters selected for printing</p>
             </div>
           </div>
-          <button 
-            onClick={handlePrint}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#7b2b2a] text-white rounded-xl font-bold hover:bg-[#5a1f1e] transition-all shadow-lg shadow-red-900/20"
-          >
-            <Printer size={18} />
-            Print Registry
-          </button>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Include:</span>
+              {[UserRole.TEACHER, UserRole.MALE, UserRole.FEMALE].map(role => (
+                <button 
+                  key={role}
+                  onClick={() => toggleRole(role)}
+                  className="flex items-center gap-1.5 group"
+                >
+                  {selectedRoles.includes(role) ? (
+                    <CheckSquare size={16} className="text-[#7b2b2a]" />
+                  ) : (
+                    <Square size={16} className="text-slate-300 group-hover:text-slate-400" />
+                  )}
+                  <span className={`text-[10px] font-bold uppercase tracking-wide ${selectedRoles.includes(role) ? 'text-slate-900' : 'text-slate-400'}`}>
+                    {role}s
+                  </span>
+                </button>
+              ))}
+            </div>
+            
+            <button 
+              onClick={handlePrint}
+              disabled={selectedRoles.length === 0}
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#7b2b2a] disabled:bg-slate-300 text-white rounded-xl font-bold hover:bg-[#5a1f1e] transition-all shadow-lg shadow-red-900/20"
+            >
+              <Printer size={18} />
+              Print Selected
+            </button>
+          </div>
         </div>
       </div>
 
@@ -76,7 +126,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
               </tr>
             </thead>
             <tbody>
-              {sortedVoters.map((voter, idx) => (
+              {processedVoters.map((voter, idx) => (
                 <tr key={voter.id} className="hover:bg-slate-50 transition-colors even:bg-slate-50/30">
                   <td className="border-b border-slate-100 px-4 py-4 text-xs font-bold text-slate-400 text-center">{idx + 1}</td>
                   <td className="border-b border-slate-100 px-4 py-4 text-sm font-black text-slate-800 uppercase">{voter.name}</td>
@@ -96,23 +146,34 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             </tbody>
           </table>
 
-          {sortedVoters.length === 0 && (
+          {processedVoters.length === 0 && (
             <div className="py-20 text-center text-slate-300 font-bold uppercase tracking-[0.3em]">
-              No voter records found
+              No voter records found for current selection
             </div>
           )}
 
-          {/* Footer for print */}
-          <div className="mt-20 flex justify-between items-end border-t border-slate-100 pt-8">
-            <div className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">
-              Generated by IPSA Executive Portal • Internal Use Only
-            </div>
-            <div className="flex gap-12">
-              <div className="w-32 text-center border-t border-slate-300 pt-2">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Election Chair</p>
+          {/* Footer for print with substantial signature space */}
+          <div className="mt-40 flex flex-col gap-16 border-t border-slate-100 pt-12">
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col items-center">
+                <div className="w-64 border-b border-slate-400 mb-2 h-24"></div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Election Chair Signature</p>
+                <p className="text-[8px] text-slate-400 mt-1 uppercase">Official Authorization</p>
               </div>
-              <div className="w-32 text-center border-t border-slate-300 pt-2">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Head Supervisor</p>
+              <div className="flex flex-col items-center">
+                <div className="w-64 border-b border-slate-400 mb-2 h-24"></div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Head Supervisor Signature</p>
+                <p className="text-[8px] text-slate-400 mt-1 uppercase">Verification Control</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-end">
+              <div className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">
+                Generated by IPSA Executive Portal • Internal Use Only
+                <div className="mt-2">&copy; 2026 International Program Student Association</div>
+              </div>
+              <div className="text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">
+                IPSA BOARD AUTHENTICATED
               </div>
             </div>
           </div>
@@ -131,12 +192,13 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
           background: white;
         }
         @media print {
-          body { background: white; margin: 0; padding: 0; }
+          body { background: white !important; margin: 0 !important; padding: 0 !important; }
           .no-print { display: none !important; }
-          .a4-container { width: auto; height: auto; shadow: none; margin: 0; }
-          table { page-break-inside: auto; }
+          .a4-container { width: auto !important; height: auto !important; shadow: none !important; margin: 0 !important; }
+          table { page-break-inside: auto; width: 100% !important; }
           tr { page-break-inside: avoid; page-break-after: auto; }
           thead { display: table-header-group; }
+          .mt-40 { margin-top: 50mm !important; }
         }
       `}</style>
     </div>

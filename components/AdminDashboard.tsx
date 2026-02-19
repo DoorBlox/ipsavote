@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Voter, UserRole } from '../types';
 import { MALE_CANDIDATES, FEMALE_CANDIDATES } from '../constants';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2, XCircle, FileText, Filter, RotateCcw, ClipboardList } from 'lucide-react';
+import { Users, Ticket, BarChart3, Upload, Download, Trash2, Printer, Search, CheckCircle2, AlertTriangle, Loader2, XCircle, FileText, Filter, RotateCcw, ClipboardList, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface AdminDashboardProps {
   voters: Voter[];
@@ -13,6 +13,9 @@ interface AdminDashboardProps {
   onClearAll: () => Promise<void>;
 }
 
+type SortKey = 'name' | 'role' | 'token' | 'used';
+type SortOrder = 'asc' | 'desc';
+
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOpenQRSheet, onOpenVoterListSheet, onClearAll }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -20,6 +23,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
   const [activeTab, setActiveTab] = useState<'stats' | 'voters' | 'manage'>('stats');
   const [isSyncing, setIsSyncing] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; order: SortOrder }>({ key: 'name', order: 'asc' });
 
   const maleElectionData = useMemo(() => {
     return MALE_CANDIDATES.map(c => ({
@@ -138,8 +144,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
     }
   };
 
+  const toggleSort = (key: SortKey) => {
+    setSortConfig(prev => ({
+      key,
+      order: prev.key === key && prev.order === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Helper to determine if a name is "numeric" (starts with number)
+  const isNumericName = (name: string) => /^\d/.test(name.trim());
+
   const filteredVoters = useMemo(() => {
-    return voters.filter(v => {
+    let result = voters.filter(v => {
       const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             v.token.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRole = roleFilter === 'all' || v.role === roleFilter;
@@ -149,12 +165,45 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
       
       return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [voters, searchTerm, roleFilter, statusFilter]);
+
+    // Apply Sorting
+    result.sort((a, b) => {
+      let comparison = 0;
+      const key = sortConfig.key;
+
+      if (key === 'name') {
+        // Special logic: Numeric names at end of alphabetical list
+        const aIsNum = isNumericName(a.name);
+        const bIsNum = isNumericName(b.name);
+
+        if (aIsNum && !bIsNum) comparison = 1;
+        else if (!aIsNum && bIsNum) comparison = -1;
+        else comparison = a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+      } else if (key === 'role') {
+        const order = { [UserRole.TEACHER]: 1, [UserRole.MALE]: 2, [UserRole.FEMALE]: 3 };
+        comparison = (order[a.role] || 99) - (order[b.role] || 99);
+      } else if (key === 'token') {
+        comparison = a.token.localeCompare(b.token);
+      } else if (key === 'used') {
+        comparison = Number(a.used) - Number(b.used);
+      }
+
+      return sortConfig.order === 'asc' ? comparison : -comparison;
+    });
+
+    return result;
+  }, [voters, searchTerm, roleFilter, statusFilter, sortConfig]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setRoleFilter('all');
     setStatusFilter('all');
+    setSortConfig({ key: 'name', order: 'asc' });
+  };
+
+  const SortIndicator = ({ column }: { column: SortKey }) => {
+    if (sortConfig.key !== column) return null;
+    return sortConfig.order === 'asc' ? <ChevronUp size={14} className="ml-1 inline" /> : <ChevronDown size={14} className="ml-1 inline" />;
   };
 
   return (
@@ -307,12 +356,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
                 <option value="awaiting">Awaiting</option>
               </select>
 
-              {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+              {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all' || sortConfig.key !== 'name') && (
                 <button 
                   onClick={clearFilters}
                   className="flex items-center gap-2 text-[#7b2b2a] hover:text-[#5a1f1e] text-[10px] font-black uppercase tracking-widest ml-auto transition-colors"
                 >
-                  <RotateCcw size={14} /> Clear Filters
+                  <RotateCcw size={14} /> Reset Table
                 </button>
               )}
             </div>
@@ -322,17 +371,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ voters, setVoters, onOp
             <table className="w-full text-left">
               <thead className="bg-[#fdfbf7] text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
                 <tr>
-                  <th className="px-8 py-5">Full Name</th>
-                  <th className="px-8 py-5">Designation</th>
-                  <th className="px-8 py-5">Token ID</th>
-                  <th className="px-8 py-5">Participation</th>
+                  <th className="px-8 py-5 cursor-pointer hover:text-slate-600 transition-colors select-none" onClick={() => toggleSort('name')}>
+                    <div className="flex items-center">Full Name <SortIndicator column="name" /></div>
+                  </th>
+                  <th className="px-8 py-5 cursor-pointer hover:text-slate-600 transition-colors select-none" onClick={() => toggleSort('role')}>
+                    <div className="flex items-center">Designation <SortIndicator column="role" /></div>
+                  </th>
+                  <th className="px-8 py-5 cursor-pointer hover:text-slate-600 transition-colors select-none" onClick={() => toggleSort('token')}>
+                    <div className="flex items-center">Token ID <SortIndicator column="token" /></div>
+                  </th>
+                  <th className="px-8 py-5 cursor-pointer hover:text-slate-600 transition-colors select-none" onClick={() => toggleSort('used')}>
+                    <div className="flex items-center">Participation <SortIndicator column="used" /></div>
+                  </th>
                   <th className="px-8 py-5">Logs</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredVoters.map((voter) => (
                   <tr key={voter.id} className="hover:bg-[#fdfbf7]/50 transition-colors">
-                    <td className="px-8 py-5 font-black text-slate-700">{voter.name}</td>
+                    <td className="px-8 py-5 font-black text-slate-700 uppercase">{voter.name}</td>
                     <td className="px-8 py-5">
                       <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border
                         ${voter.role === UserRole.MALE ? 'bg-blue-50 border-blue-100 text-blue-600' : 
