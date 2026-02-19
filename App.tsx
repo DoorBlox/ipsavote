@@ -150,12 +150,14 @@ const App: React.FC = () => {
   };
 
   const clearAllData = async () => {
-    if (supabase) {
-      const { error } = await supabase.from('voters').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (error) throw error;
-      setVoters([]);
-    } else {
-      setVoters([]);
+    if (confirm('Permanently wipe ALL data?')) {
+      if (supabase) {
+        const { error } = await supabase.from('voters').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (error) throw error;
+        setVoters([]);
+      } else {
+        setVoters([]);
+      }
     }
   };
 
@@ -168,9 +170,12 @@ const App: React.FC = () => {
     );
   }
 
+  // Determine if we should show standard layout or full-screen "sheet" layout
+  const isSheetView = view === 'qr-sheet' || view === 'voter-list-sheet';
+
   return (
-    <div className="min-h-screen bg-[#fdfbf7] flex flex-col text-slate-800">
-      <header className="bg-[#7b2b2a] text-white p-4 shadow-xl border-b-4 border-[#c5a059] flex justify-between items-center no-print">
+    <div className={`min-h-screen flex flex-col text-slate-800 ${isSheetView ? 'bg-white' : 'bg-[#fdfbf7]'}`}>
+      <header className={`bg-[#7b2b2a] text-white p-4 shadow-xl border-b-4 border-[#c5a059] flex justify-between items-center no-print ${isSheetView ? 'hidden' : ''}`}>
         <div 
           className="flex items-center gap-3 cursor-pointer min-w-0 flex-1" 
           onClick={() => !adminAuthenticated && setView('voter-portal')}
@@ -211,8 +216,8 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-8 relative">
-        {!dbConnected && view !== 'admin-login' && !adminAuthenticated && (
+      <main className={`flex-1 relative ${isSheetView ? '' : 'container mx-auto px-4 py-8'}`}>
+        {!dbConnected && view !== 'admin-login' && !adminAuthenticated && !isSheetView && (
           <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-800 p-4 mb-6 rounded-r-xl text-sm font-medium animate-in fade-in duration-500 shadow-sm">
             ⚠️ {isSupabaseEnabled ? 'Synchronizing with cloud services...' : 'System running in local offline mode.'}
           </div>
@@ -314,24 +319,26 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="bg-[#fdfbf7] border-t border-slate-200 py-10 no-print">
-        <div className="container mx-auto text-center px-4">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="h-px bg-slate-200 w-12"></div>
-            <div className="text-[#7b2b2a] font-bold text-xs uppercase tracking-[0.3em]">Official Portal</div>
-            <div className="h-px bg-slate-200 w-12"></div>
+      {!isSheetView && (
+        <footer className="bg-[#fdfbf7] border-t border-slate-200 py-10 no-print">
+          <div className="container mx-auto text-center px-4">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="h-px bg-slate-200 w-12"></div>
+              <div className="text-[#7b2b2a] font-bold text-xs uppercase tracking-[0.3em]">Official Portal</div>
+              <div className="h-px bg-slate-200 w-12"></div>
+            </div>
+            <p className="text-slate-500 text-sm font-medium">
+              &copy; 2026 Hisyam 
+              <br className="sm:hidden" />
+              <span className="mx-2 hidden sm:inline">•</span>
+              4EVER
+              <br className="sm:hidden" />
+              <span className="mx-2 hidden sm:inline">•</span>
+              International Program Student Association Executive Board
+            </p>
           </div>
-          <p className="text-slate-500 text-sm font-medium">
-            &copy; 2026 Hisyam 
-            <br className="sm:hidden" />
-            <span className="mx-2 hidden sm:inline">•</span>
-            4EVER
-            <br className="sm:hidden" />
-            <span className="mx-2 hidden sm:inline">•</span>
-            International Program Student Association Executive Board
-          </p>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 };

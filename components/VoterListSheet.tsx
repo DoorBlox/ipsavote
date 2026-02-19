@@ -48,9 +48,9 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 print:bg-white pb-20 print:pb-0">
+    <div className="min-h-screen bg-slate-200 print:bg-white pb-20 print:pb-0 overflow-x-hidden">
       {/* UI Controls - Hidden on Print */}
-      <div className="no-print bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+      <div className="no-print bg-white border-b border-slate-200 sticky top-0 z-50 shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button 
@@ -114,44 +114,44 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
 
       {/* Printable Sheet Container */}
       <div 
-        className="paper-container mx-auto bg-white shadow-2xl print:shadow-none print:m-0 mt-8 print:mt-0 transition-all duration-300"
+        className="paper-container mx-auto bg-white shadow-2xl print:shadow-none print:m-0 mt-8 print:mt-0 transition-all duration-300 relative z-10"
         style={getPaperDimensions()}
       >
-        <div className="p-8 print:p-[8mm] min-h-full flex flex-col">
+        <div className="p-8 print:p-[8mm] min-h-full flex flex-col bg-white">
           
-          <table className="w-full text-left border-collapse flex-grow">
-            <thead className="table-header-group">
+          <table className="w-full text-left border-collapse flex-grow bg-white">
+            <thead className="table-header-group bg-white">
               <tr>
-                <td colSpan={4} className="border-none">
-                  <div className="flex items-center justify-between border-b-2 border-slate-900 pt-6 pb-6 mb-8">
-                    <div className="flex items-center gap-4">
+                <td colSpan={4} className="border-none bg-white">
+                  <div className="flex items-center justify-between border-b-2 border-slate-900 pt-6 pb-6 mb-8 bg-white">
+                    <div className="flex items-center gap-4 bg-white">
                       <img src={APP_LOGO} alt="Logo" className="w-16 h-16 object-contain" />
-                      <div>
+                      <div className="bg-white">
                         <h1 className="text-2xl font-black text-[#7b2b2a] uppercase tracking-tight leading-none">Voter Registry List</h1>
                         <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-[0.1em]">IPSA Council Election • 2026 Session</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right bg-white">
                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Election Date</p>
                       <p className="text-sm font-black text-slate-800 uppercase">MARCH 12, 2026</p>
                     </div>
                   </div>
                 </td>
               </tr>
-              <tr className="bg-slate-50 print:bg-white border-y border-slate-200">
-                <th className="px-3 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest w-12 text-center">No.</th>
-                <th className="px-4 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest">Registered Name</th>
-                <th className="px-4 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest">Role</th>
-                <th className="px-4 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Token ID</th>
+              <tr className="bg-white border-y border-slate-200">
+                <th className="px-3 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest w-12 text-center bg-white">No.</th>
+                <th className="px-4 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white">Registered Name</th>
+                <th className="px-4 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest bg-white">Role</th>
+                <th className="px-4 py-3 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right bg-white">Token ID</th>
               </tr>
             </thead>
 
-            <tbody className="table-row-group">
+            <tbody className="table-row-group bg-white">
               {processedVoters.map((voter, idx) => (
-                <tr key={voter.id} className="border-b border-slate-100">
-                  <td className="px-3 py-3 text-[10px] font-bold text-slate-400 text-center">{idx + 1}</td>
-                  <td className="px-4 py-3 text-[11px] font-black text-slate-800 uppercase tracking-tight">{voter.name}</td>
-                  <td className="px-4 py-3">
+                <tr key={voter.id} className="border-b border-slate-100 bg-white">
+                  <td className="px-3 py-3 text-[10px] font-bold text-slate-400 text-center bg-white">{idx + 1}</td>
+                  <td className="px-4 py-3 text-[11px] font-black text-slate-800 uppercase tracking-tight bg-white">{voter.name}</td>
+                  <td className="px-4 py-3 bg-white">
                     <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border
                       ${voter.role === UserRole.MALE ? 'border-blue-100 text-blue-600' : 
                         voter.role === UserRole.FEMALE ? 'border-rose-100 text-rose-600' : 
@@ -159,7 +159,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
                       {voter.role}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right bg-white">
                     <span className="font-mono text-[10px] font-black text-[#7b2b2a] tracking-widest">{voter.token}</span>
                   </td>
                 </tr>
@@ -167,15 +167,15 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
               
               {/* Signature Row: Appears only on the last page above the footer */}
               {processedVoters.length > 0 && (
-                <tr className="signature-row">
-                  <td colSpan={4} className="pt-20 pb-12">
-                    <div className="flex justify-around items-start">
-                      <div className="flex flex-col items-center">
-                        <div className="w-56 border-b border-slate-900 mb-3 h-20"></div>
+                <tr className="signature-row bg-white">
+                  <td colSpan={4} className="pt-20 pb-12 bg-white">
+                    <div className="flex justify-around items-start bg-white">
+                      <div className="flex flex-col items-center bg-white">
+                        <div className="w-56 border-b border-slate-900 mb-3 h-20 bg-white"></div>
                         <p className="text-[9px] font-black text-slate-900 uppercase">Election Chair</p>
                       </div>
-                      <div className="flex flex-col items-center">
-                        <div className="w-56 border-b border-slate-900 mb-3 h-20"></div>
+                      <div className="flex flex-col items-center bg-white">
+                        <div className="w-56 border-b border-slate-900 mb-3 h-20 bg-white"></div>
                         <p className="text-[9px] font-black text-slate-900 uppercase">Head Supervisor</p>
                       </div>
                     </div>
@@ -184,14 +184,14 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
               )}
             </tbody>
 
-            <tfoot className="table-footer-group">
+            <tfoot className="table-footer-group bg-white">
               <tr>
-                <td colSpan={4} className="pt-6 pb-2">
-                  <div className="flex justify-between items-center border-t border-slate-200 pt-4 opacity-50">
-                    <div className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">
+                <td colSpan={4} className="pt-6 pb-2 bg-white">
+                  <div className="flex justify-between items-center border-t border-slate-200 pt-4 opacity-50 bg-white">
+                    <div className="text-[8px] text-slate-400 font-bold uppercase tracking-wider bg-white">
                       Generated by IPSA Executive Portal • 2026 Session
                     </div>
-                    <div className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    <div className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] bg-white">
                       Confidential Election Document
                     </div>
                   </div>
@@ -201,7 +201,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
           </table>
 
           {processedVoters.length === 0 && (
-            <div className="py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-xs">
+            <div className="py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-xs bg-white">
               No voter records found
             </div>
           )}
@@ -216,16 +216,19 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
         
         .paper-container {
           box-sizing: border-box;
-          background: white;
+          background: white !important;
           display: flex;
           flex-direction: column;
         }
         
         @media print {
-          html, body {
+          /* Aggressive override for ANY background in print */
+          html, body, #root, .min-h-screen, main, .flex-1, .paper-container, table, thead, tbody, tfoot, tr, td, th, div, span {
             background-color: white !important;
+            background: white !important;
             margin: 0 !important;
             padding: 0 !important;
+            box-shadow: none !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
@@ -240,6 +243,7 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             margin: 0 !important;
             background: white !important;
             padding: 0 !important;
+            position: static !important;
           }
           
           table { 
@@ -260,8 +264,9 @@ const VoterListSheet: React.FC<VoterListSheetProps> = ({ voters, onBack }) => {
             page-break-inside: avoid;
           }
 
-          .bg-slate-50, .bg-blue-50, .bg-rose-50, .bg-amber-50 {
-            background-color: white !important;
+          /* Ensure designations and tokens keep their colors if they have them, but base bg is white */
+          .bg-white {
+             background-color: white !important;
           }
         }
       `}</style>
