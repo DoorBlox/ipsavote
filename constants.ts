@@ -21,17 +21,18 @@ export const MALE_CANDIDATES: Candidate[] = [
 export const FEMALE_CANDIDATES: Candidate[] = [
   { 
     id: 'f1', 
-    name: 'Nawaz Ayn Salamah', 
-    viceName: 'Nitisara Nararya', 
-    gender: 'female',
-    imageUrl: 'https://i.imgur.com/8ZyLImE.png'
-  },
-  { 
-    id: 'f2', 
     name: 'Aisya Khumaira S.', 
     viceName: 'Nayla Aulia Maulidina', 
     gender: 'female',
     imageUrl: 'https://i.imgur.com/w3GpdP1.png'
+
+  },
+  { 
+    id: 'f2', 
+    name: 'Nawaz Ayn Salamah', 
+    viceName: 'Nitisara Nararya', 
+    gender: 'female',
+    imageUrl: 'https://i.imgur.com/8ZyLImE.png'
   },
 ];
 
