@@ -130,7 +130,7 @@ const App: React.FC = () => {
   };
 
   const handleAdminLogin = (key: string) => {
-    const expected = import.meta.env.VITE_ADMIN_PASSPHRASE || 'admin123';
+    const expected = import.meta.env.VITE_ADMIN_PASSPHRASE || '4dm1n123';
     if (key === expected) {
       setAdminAuthenticated(true);
       setView('admin-dashboard');
